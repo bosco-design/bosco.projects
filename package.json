@@ -1,0 +1,19 @@
+{
+  "name": "project-website-code",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "jsdom": "^27.1.0",
+    "matter-js": "^0.20.0",
+    "pathseg": "^1.2.1",
+    "puppeteer": "^24.27.0"
+  }
+}

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOSCO ZHANG</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/B-favicon-dark.svg" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/B-favicon-light.svg" media="(prefers-color-scheme: dark)">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <canvas id="webgl-canvas"></canvas>
+
+    <nav class="navbar">
+        <ul>
+            <li class="nav-about"><a href="#about"><span class="nav-inner">ABOUT</span></a></li>
+            <li class="nav-works"><a href="#works"><span class="nav-inner">WORKS</span></a></li>
+            <li class="nav-gallery"><a href="#gallery"><span class="nav-inner">GALLERY</span></a></li>
+            <li class="nav-spacing"><a><span class="nav-inner"></span></a></li>
+            <li class="nav-home">
+                <a href="#home">
+                    <span class="nav-inner">
+                        <svg class="nav-icon" viewBox="0 0 790 790" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="395" cy="395" r="385" stroke="currentColor" stroke-width="20"/>
+                            <path d="M545 128C600.228 128 645 172.772 645 228V253C645 295.964 617.905 332.597 579.87 346.75C617.461 360.738 644.366 396.685 644.988 439H645V503C645 572.036 589.036 628 520 628H145L182.5 478H438C451.807 478 463 466.807 463 453C463 439.193 451.807 428 438 428H195L220 328H475.5C489.307 328 500.5 316.807 500.5 303C500.5 289.193 489.307 278 475.5 278H232.5L270 128H545Z" fill="currentColor"/>
+                        </svg>
+                    </span>
+                </a>
+            </li>
+            <li class="nav-spacing"><a><span class="nav-inner"></span></a></li>
+            <li class="nav-snap"><a href="snap"><span class="nav-inner">TAKE A SHOT!</span></a></li>
+            <li class="nav-contact"><a href="#contact"><span class="nav-inner">CONTACT</span></a></li>
+            <li class="nav-linkedin">
+                <a href="https://www.linkedin.com/in/bosco-zhang" target="_blank" rel="noopener noreferrer">
+                    <span class="nav-inner">
+                        <svg class="nav-linkedin" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="#111111" d="M21,21H17V14.25C17,13.19 15.81,12.31 14.75,12.31C13.69,12.31 13,13.19 13,14.25V21H9V9H13V11C13.66,9.93 15.36,9.24 16.5,9.24C19,9.24 21,11.28 21,13.75V21M7,21H3V9H7V21M5,3A2,2 0 0,1 7,5A2,2 0 0,1 5,7A2,2 0 0,1 3,5A2,2 0 0,1 5,3Z"/>
+                        </svg>
+                    </span>
+                </a>
+            </li>
+            <li class="nav-en"><a aria-disabled="true" tabindex="-1"><span class="nav-inner">EN</span></a></li>
+        </ul>
+    </nav>
+
+    <div class="cursor" id="cursor" aria-hidden="true"></div>
+
+    <script type="importmap">
+      { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // 场景与相机基础配置
+        const canvas = document.querySelector('#webgl-canvas');
+        const cursorEl = document.getElementById('cursor');
+        const navLinks = document.querySelectorAll('.navbar li a');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 20);
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // 丝滑光标状态
+        let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let delayedPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let isInside = false; 
+        const lerpFactor = 0.12;
+
+        // 粒子系统核心参数
+        const PARTICLE_COUNT = 10000;
+        const gridPhysicalSize = 35;
+        const baseRotationSpeed = 0.05;
+        const earthRotationSpeed = 0.6;
+        const hoverInProgressSpeed = 0.08;
+        const hoverOutProgressSpeed = 0.035;
+        const LINKEDIN_NODE_COUNT = 54;
+        const LINKEDIN_MAX_SEGMENTS = 72;
+        const LINKEDIN_CONNECTION_DISTANCE = 2.75;
+        const LINKEDIN_MAX_NEIGHBORS = 2;
+        const LINKEDIN_FIELD_DEPTH = 2.8;
+        const LINKEDIN_GROUP_COUNT = 11;
+        const linkedinBlue = new THREE.Color(0x0a66c2);
+        const nodeBlack = new THREE.Color(0x111111);
+        const precomputedShapes = {};
+        const linkedinPointGroups = new Float32Array(PARTICLE_COUNT);
+        const linkedinGroupCenters = new Float32Array(LINKEDIN_GROUP_COUNT * 3);
+        const linkedinLocalOffsets = new Float32Array(PARTICLE_COUNT * 3);
+        const linkedinDustAnchors = new Uint16Array(PARTICLE_COUNT);
+        const linkedinDustMotion = new Float32Array(PARTICLE_COUNT * 4);
+        const linkedinDustMode = new Float32Array(PARTICLE_COUNT);
+        let totalRotation = 0;
+        let currentShape = 'grid';
+        let hitZones = [];
+        let linkedinNetworkVisibility = 0;
+
+        // 陆地采样函数
+        const getEarthPoints = (sourceCanvas) => {
+            const samplingCanvas = document.createElement('canvas');
+            const ctx = samplingCanvas.getContext('2d');
+            samplingCanvas.width = 512; samplingCanvas.height = 256;
+            ctx.drawImage(sourceCanvas, 0, 0, 512, 256);
+            const pixels = ctx.getImageData(0, 0, 512, 256).data;
+            const landPoints = [];
+            for (let y = 0; y < 256; y++) {
+                for (let x = 0; x < 512; x++) {
+                    if (pixels[(y * 512 + x) * 4] > 128) landPoints.push({ u: x / 512, v: y / 256 });
+                }
+            }
+            const data = new Float32Array(PARTICLE_COUNT * 3);
+            const radius = 8.5; // 缩小地球半径使视觉更精致
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const sample = landPoints[Math.floor(Math.random() * landPoints.length)];
+                const lon = sample.u * Math.PI * 2 - Math.PI;
+                const lat = sample.v * Math.PI - Math.PI / 2;
+                data[i * 3] = radius * Math.cos(lat) * Math.cos(lon);
+                data[i * 3 + 1] = -radius * Math.sin(lat);
+                data[i * 3 + 2] = radius * Math.cos(lat) * Math.sin(lon);
+            }
+            return data;
+        };
+
+        const isPointInPolygon = (x, y, polygon) => {
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i][0];
+                const yi = polygon[i][1];
+                const xj = polygon[j][0];
+                const yj = polygon[j][1];
+                const intersects = ((yi > y) !== (yj > y))
+                    && (x < (xj - xi) * (y - yi) / ((yj - yi) || 0.0001) + xi);
+                if (intersects) inside = !inside;
+            }
+            return inside;
+        };
+
+        const samplePointInPolygon = polygon => {
+            let minX = Infinity;
+            let maxX = -Infinity;
+            let minY = Infinity;
+            let maxY = -Infinity;
+
+            for (let i = 0; i < polygon.length; i++) {
+                minX = Math.min(minX, polygon[i][0]);
+                maxX = Math.max(maxX, polygon[i][0]);
+                minY = Math.min(minY, polygon[i][1]);
+                maxY = Math.max(maxY, polygon[i][1]);
+            }
+
+            for (let i = 0; i < 120; i++) {
+                const x = THREE.MathUtils.lerp(minX, maxX, Math.random());
+                const y = THREE.MathUtils.lerp(minY, maxY, Math.random());
+                if (isPointInPolygon(x, y, polygon)) return [x, y];
+            }
+
+            const fallback = polygon[Math.floor(Math.random() * polygon.length)];
+            return [fallback[0], fallback[1]];
+        };
+
+        const getLinkedinGroupOffset = (groupIndex, elapsed) => {
+            const phase = groupIndex * 0.9;
+            return {
+                x: Math.sin(elapsed * (0.22 + groupIndex * 0.013) + phase) * 0.7,
+                y: Math.cos(elapsed * (0.18 + groupIndex * 0.01) + phase * 0.7) * 0.12,
+                z: Math.cos(elapsed * (0.2 + groupIndex * 0.015) + phase * 1.3) * 0.8
+            };
+        };
+
+        const getLinkedinGroupMorph = (groupIndex, elapsed) => {
+            const phase = groupIndex * 1.17;
+            return {
+                scaleX: 1.0 + Math.sin(elapsed * (0.36 + groupIndex * 0.02) + phase) * 0.22,
+                scaleZ: 1.0 + Math.cos(elapsed * (0.31 + groupIndex * 0.017) + phase * 0.8) * 0.26,
+                shear: Math.sin(elapsed * (0.28 + groupIndex * 0.014) + phase * 1.2) * 0.16,
+                twist: Math.sin(elapsed * (0.24 + groupIndex * 0.012) + phase * 0.6) * 0.18,
+                lift: Math.cos(elapsed * (0.34 + groupIndex * 0.022) + phase) * 0.14
+            };
+        };
+
+        const cacheLinkedinGroupGeometry = data => {
+            const counts = new Uint16Array(LINKEDIN_GROUP_COUNT);
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const groupIndex = linkedinPointGroups[i];
+                const idx = i * 3;
+                const centerIdx = groupIndex * 3;
+                linkedinGroupCenters[centerIdx] += data[idx];
+                linkedinGroupCenters[centerIdx + 1] += data[idx + 1];
+                linkedinGroupCenters[centerIdx + 2] += data[idx + 2];
+                counts[groupIndex]++;
+            }
+
+            for (let i = 0; i < LINKEDIN_GROUP_COUNT; i++) {
+                const centerIdx = i * 3;
+                const count = Math.max(counts[i], 1);
+                linkedinGroupCenters[centerIdx] /= count;
+                linkedinGroupCenters[centerIdx + 1] /= count;
+                linkedinGroupCenters[centerIdx + 2] /= count;
+            }
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const idx = i * 3;
+                const centerIdx = linkedinPointGroups[i] * 3;
+                linkedinLocalOffsets[idx] = data[idx] - linkedinGroupCenters[centerIdx];
+                linkedinLocalOffsets[idx + 1] = data[idx + 1] - linkedinGroupCenters[centerIdx + 1];
+                linkedinLocalOffsets[idx + 2] = data[idx + 2] - linkedinGroupCenters[centerIdx + 2];
+            }
+        };
+
+        const buildLinkedInPoints = () => {
+            const data = new Float32Array(PARTICLE_COUNT * 3);
+            const polygons = [
+                [[-14.2, -5.4], [-12.0, -8.8], [-8.1, -8.3], [-5.8, -4.8], [-7.2, -1.8], [-11.1, -1.1]],
+                [[-8.4, 3.7], [-5.6, 8.1], [-1.7, 8.0], [0.9, 4.6], [-1.0, 1.8], [-5.6, 1.4]],
+                [[-2.2, -2.2], [1.8, -5.7], [6.1, -3.9], [6.4, 0.5], [3.2, 3.4], [-1.2, 2.0], [-3.0, -0.3]],
+                [[6.8, 4.8], [10.4, 8.6], [13.7, 7.1], [14.0, 3.4], [11.0, 1.0], [7.4, 2.1]],
+                [[9.9, -5.8], [13.5, -7.9], [16.6, -5.2], [15.9, -1.2], [12.3, 1.0], [8.8, -1.8]],
+                [[-13.2, 6.9], [-10.5, 10.2], [-6.4, 9.6], [-5.2, 6.4], [-7.6, 4.2], [-11.7, 4.6]],
+                [[2.0, 8.0], [5.7, 11.4], [9.4, 9.7], [9.7, 6.4], [6.5, 4.3], [2.8, 5.1]],
+                [[12.4, 1.0], [15.6, 3.7], [17.4, 1.0], [16.4, -2.5], [13.1, -3.4], [11.2, -1.1]]
+            ];
+            const bridgePaths = [
+                [[-8.3, -3.2], [-5.7, -0.9], [-3.1, 1.6]],
+                [[2.0, 1.2], [5.4, 2.4], [8.8, 3.8]],
+                [[5.5, -1.4], [8.5, -1.5], [11.4, -2.3]]
+            ];
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const idx = i * 3;
+                let point;
+                let groupIndex;
+
+                if (i < LINKEDIN_NODE_COUNT && i % 7 === 0) {
+                    const pathIndex = Math.floor(i / 7) % bridgePaths.length;
+                    const path = bridgePaths[pathIndex];
+                    const segmentIndex = Math.floor(Math.random() * (path.length - 1));
+                    const start = path[segmentIndex];
+                    const end = path[segmentIndex + 1];
+                    const t = Math.random();
+                    groupIndex = polygons.length + pathIndex;
+                    point = [
+                        THREE.MathUtils.lerp(start[0], end[0], t) + (Math.random() - 0.5) * 0.5,
+                        THREE.MathUtils.lerp(start[1], end[1], t) + (Math.random() - 0.5) * 0.5
+                    ];
+                } else {
+                    groupIndex = i % polygons.length;
+                    point = samplePointInPolygon(polygons[groupIndex]);
+                }
+
+                const depthNoise = (Math.random() - 0.5) * LINKEDIN_FIELD_DEPTH;
+                data[idx] = point[0];
+                data[idx + 1] = depthNoise + (Math.random() - 0.5) * 0.25;
+                data[idx + 2] = point[1];
+                linkedinPointGroups[i] = groupIndex;
+            }
+
+            return data;
+        };
+
+        const initShapes = () => {
+            // 网格生成
+            const grid = new Float32Array(PARTICLE_COUNT * 3);
+            for (let i = 0; i < 100; i++) for (let j = 0; j < 100; j++) {
+                const idx = (i * 100 + j) * 3;
+                grid[idx] = (i / 99.0 - 0.5) * gridPhysicalSize;
+                grid[idx + 2] = (j / 99.0 - 0.5) * gridPhysicalSize;
+            }
+            precomputedShapes.grid = grid;
+
+            const indices = Array.from({ length: PARTICLE_COUNT }, (_, i) => i).sort(() => Math.random() - 0.5);
+
+            // B形状生成
+            const bPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            bPath.setAttribute("d", "M545 128C600.228 128 645 172.772 645 228V253C645 295.964 617.905 332.597 579.87 346.75C617.461 360.738 644.366 396.685 644.988 439H645V503C645 572.036 589.036 628 520 628H145L182.5 478H438C451.807 478 463 466.807 463 453C463 439.193 451.807 428 438 428H195L220 328H475.5C489.307 328 500.5 316.807 500.5 303C500.5 289.193 489.307 278 475.5 278H232.5L270 128H545Z");
+            const bLen = bPath.getTotalLength();
+            const bData = new Float32Array(PARTICLE_COUNT * 3);
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const p = bPath.getPointAtLength((i / PARTICLE_COUNT) * bLen);
+                const tIdx = indices[i] * 3;
+                bData[tIdx] = (p.x - 395) * 0.025;
+                bData[tIdx + 1] = -(p.y - 395) * 0.025;
+                bData[tIdx + 2] = (Math.random() - 0.5) * 2.0;
+            }
+            precomputedShapes.home = bData;
+            precomputedShapes.linkedin = buildLinkedInPoints();
+            cacheLinkedinGroupGeometry(precomputedShapes.linkedin);
+
+            // 使用项目内本地 SVG 地图素材，保留真实大陆轮廓并避免 Safari 的跨域限制
+            const img = new Image();
+            img.onload = () => { precomputedShapes.en = getEarthPoints(img); };
+            img.onerror = () => { precomputedShapes.en = precomputedShapes.grid; };
+            img.src = 'assets/images/world-map.svg';
+        };
+
+        initShapes();
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(precomputedShapes.grid, 3));
+        geometry.setAttribute('aTarget', new THREE.BufferAttribute(new Float32Array(precomputedShapes.grid), 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 3), 3));
+        geometry.setAttribute('aMotion', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 4), 4));
+        geometry.setAttribute('aNetworkNode', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT), 1));
+        geometry.setAttribute('aPointScale', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT), 1));
+
+        const pointColors = geometry.attributes.color.array;
+        const pointMotion = geometry.attributes.aMotion.array;
+        const pointNetworkNode = geometry.attributes.aNetworkNode.array;
+        const pointScale = geometry.attributes.aPointScale.array;
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const idx = i * 3;
+            pointColors[idx] = nodeBlack.r;
+            pointColors[idx + 1] = nodeBlack.g;
+            pointColors[idx + 2] = nodeBlack.b;
+            pointScale[i] = 0.74 + Math.random() * 0.18;
+        }
+
+        const material = new THREE.ShaderMaterial({
+            transparent: true, depthWrite: false, blending: THREE.NormalBlending,
+            uniforms: { uTime: { value: 0 }, uProgress: { value: 0 }, uLinkedinMix: { value: 0 } },
+            vertexShader: `
+                uniform float uTime; uniform float uProgress; uniform float uLinkedinMix; attribute vec3 aTarget; attribute vec3 color; attribute vec4 aMotion; attribute float aNetworkNode; attribute float aPointScale; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix;
+                void main() {
+                    vec3 wavePos = position;
+                    wavePos.y += sin(wavePos.x + uTime * 1.2) * 0.3 + cos(wavePos.z + uTime * 1.5) * 0.3;
+                    vec3 finalPos = mix(wavePos, aTarget, uProgress);
+                    vec3 linkedinDrift = vec3(
+                        sin(uTime * aMotion.z + aMotion.x) * aMotion.w,
+                        cos(uTime * (aMotion.z - 0.15) + aMotion.y) * aMotion.w * 0.35,
+                        cos(uTime * aMotion.z + aMotion.y) * aMotion.w
+                    );
+                    finalPos += linkedinDrift * aNetworkNode * uLinkedinMix;
+                    vec4 mvPos = modelViewMatrix * vec4(finalPos, 1.0);
+                    float defaultPointSize = (45.0 + uProgress * 70.0) * (1.0 / -mvPos.z);
+                    float linkedinDepthFactor = clamp(18.0 / max(-mvPos.z, 0.001), 0.9, 1.16);
+                    float linkedinScale = aPointScale * linkedinDepthFactor;
+                    float linkedinNodeMix = uLinkedinMix * aNetworkNode;
+                    float hiddenMix = uLinkedinMix * (1.0 - aNetworkNode);
+                    float linkedinPointSize = mix(defaultPointSize, (10.0 + uProgress * 16.0) * linkedinScale, linkedinNodeMix);
+                    gl_PointSize = mix(linkedinPointSize, defaultPointSize * 0.68, hiddenMix);
+                    gl_Position = projectionMatrix * mvPos;
+                    vColor = color;
+                    vAlpha = mix(mix(0.88, 0.94, linkedinNodeMix), 0.5, hiddenMix);
+                    vLinkedinNodeMix = linkedinNodeMix;
+                    vHiddenMix = hiddenMix;
+                }
+            `,
+            fragmentShader: `
+                varying vec3 vColor;
+                varying float vAlpha;
+                varying float vLinkedinNodeMix;
+                varying float vHiddenMix;
+                void main() {
+                    float dist = distance(gl_PointCoord, vec2(0.5));
+                    float defaultAlpha = smoothstep(0.5, 0.1, dist);
+                    float softAlpha = step(dist, 0.5);
+                    float alpha = mix(defaultAlpha, softAlpha, vLinkedinNodeMix);
+                    if (dist > 0.5) discard;
+                    if (vHiddenMix > 0.001) gl_FragDepth = gl_FragCoord.z + 0.0008;
+                    gl_FragColor = vec4(vColor, vAlpha * alpha);
+                }
+            `
+        });
+
+        const points = new THREE.Points(geometry, material);
+        const linkedinLinePositions = new Float32Array(LINKEDIN_MAX_SEGMENTS * 2 * 3);
+        const linkedinLineGeometry = new THREE.BufferGeometry();
+        linkedinLineGeometry.setAttribute('position', new THREE.BufferAttribute(linkedinLinePositions, 3));
+        linkedinLineGeometry.setDrawRange(0, 0);
+
+        const linkedinLineMaterial = new THREE.LineBasicMaterial({
+            color: linkedinBlue,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+            depthTest: false
+        });
+        const linkedinLines = new THREE.LineSegments(linkedinLineGeometry, linkedinLineMaterial);
+        const particleRig = new THREE.Group();
+        particleRig.add(points);
+        particleRig.add(linkedinLines);
+        scene.add(particleRig);
+        points.renderOrder = 10;
+        linkedinLines.renderOrder = 11;
+
+        const linkedinMotionSeeds = Array.from({ length: LINKEDIN_NODE_COUNT }, () => ({
+            phaseA: Math.random() * Math.PI * 2,
+            phaseB: Math.random() * Math.PI * 2,
+            speedA: 0.35 + Math.random() * 0.45,
+            speedB: 0.3 + Math.random() * 0.4,
+            amplitude: 0.16 + Math.random() * 0.26
+        }));
+        const linkedinNodePositions = new Float32Array(LINKEDIN_NODE_COUNT * 3);
+        const linkedinAnchorTargets = new Float32Array(LINKEDIN_NODE_COUNT * 3);
+
+        for (let i = 0; i < LINKEDIN_NODE_COUNT; i++) {
+            const motionIdx = i * 4;
+            const seed = linkedinMotionSeeds[i];
+            pointMotion[motionIdx] = seed.phaseA;
+            pointMotion[motionIdx + 1] = seed.phaseB;
+            pointMotion[motionIdx + 2] = seed.speedB;
+            pointMotion[motionIdx + 3] = seed.amplitude;
+            pointNetworkNode[i] = 1;
+        }
+
+        for (let i = LINKEDIN_NODE_COUNT; i < PARTICLE_COUNT; i++) {
+            const motionIdx = i * 4;
+            linkedinDustAnchors[i] = Math.floor(Math.random() * LINKEDIN_NODE_COUNT);
+            linkedinDustMode[i] = Math.random() < 0.34 ? 1 : 0;
+            linkedinDustMotion[motionIdx] = Math.random() * Math.PI * 2;
+            linkedinDustMotion[motionIdx + 1] = Math.random() * Math.PI * 2;
+            linkedinDustMotion[motionIdx + 2] = 0.2 + Math.random() * 0.3;
+            linkedinDustMotion[motionIdx + 3] = 0.4 + Math.random() * 1.2;
+        }
+
+        const transitionTo = name => {
+            if (name === currentShape || !precomputedShapes[name]) return;
+            geometry.attributes.aTarget.array.set(precomputedShapes[name]);
+            geometry.attributes.aTarget.needsUpdate = true;
+            currentShape = name;
+        };
+
+        const updateLinkedInTargets = elapsed => {
+            const targetArray = geometry.attributes.aTarget.array;
+            for (let i = 0; i < LINKEDIN_NODE_COUNT; i++) {
+                const idx = i * 3;
+                const groupIndex = linkedinPointGroups[i];
+                const centerIdx = groupIndex * 3;
+                const offset = getLinkedinGroupOffset(groupIndex, elapsed);
+                const morph = getLinkedinGroupMorph(groupIndex, elapsed);
+                const localX = linkedinLocalOffsets[idx];
+                const localY = linkedinLocalOffsets[idx + 1];
+                const localZ = linkedinLocalOffsets[idx + 2];
+                const rotatedX = localX * Math.cos(morph.twist) - localZ * Math.sin(morph.twist);
+                const rotatedZ = localX * Math.sin(morph.twist) + localZ * Math.cos(morph.twist);
+                const morphedX = rotatedX * morph.scaleX + rotatedZ * morph.shear;
+                const morphedZ = rotatedZ * morph.scaleZ;
+
+                targetArray[idx] = linkedinGroupCenters[centerIdx] + morphedX + offset.x;
+                targetArray[idx + 1] = linkedinGroupCenters[centerIdx + 1] + localY + morph.lift + offset.y;
+                targetArray[idx + 2] = linkedinGroupCenters[centerIdx + 2] + morphedZ + offset.z;
+                linkedinAnchorTargets[idx] = targetArray[idx];
+                linkedinAnchorTargets[idx + 1] = targetArray[idx + 1];
+                linkedinAnchorTargets[idx + 2] = targetArray[idx + 2];
+            }
+
+            for (let i = LINKEDIN_NODE_COUNT; i < PARTICLE_COUNT; i++) {
+                const idx = i * 3;
+                const groupIndex = linkedinPointGroups[i];
+                const centerIdx = groupIndex * 3;
+                const offset = getLinkedinGroupOffset(groupIndex, elapsed);
+                const morph = getLinkedinGroupMorph(groupIndex, elapsed);
+                const localX = linkedinLocalOffsets[idx];
+                const localY = linkedinLocalOffsets[idx + 1];
+                const localZ = linkedinLocalOffsets[idx + 2];
+                const rotatedX = localX * Math.cos(morph.twist) - localZ * Math.sin(morph.twist);
+                const rotatedZ = localX * Math.sin(morph.twist) + localZ * Math.cos(morph.twist);
+                const morphedX = rotatedX * morph.scaleX + rotatedZ * morph.shear;
+                const morphedZ = rotatedZ * morph.scaleZ;
+
+                if (linkedinDustMode[i] < 0.5) {
+                    targetArray[idx] = linkedinGroupCenters[centerIdx] + morphedX + offset.x;
+                    targetArray[idx + 1] = linkedinGroupCenters[centerIdx + 1] + localY + morph.lift + offset.y;
+                    targetArray[idx + 2] = linkedinGroupCenters[centerIdx + 2] + morphedZ + offset.z;
+                    continue;
+                }
+
+                const motionIdx = i * 4;
+                const anchorIdx = linkedinDustAnchors[i] * 3;
+                const phaseA = linkedinDustMotion[motionIdx];
+                const phaseB = linkedinDustMotion[motionIdx + 1];
+                const speed = linkedinDustMotion[motionIdx + 2];
+                const radiusBase = linkedinDustMotion[motionIdx + 3];
+                const orbit = elapsed * speed + phaseA;
+                const wobble = elapsed * (speed * 0.63) + phaseB;
+                const radius = radiusBase * (0.7 + 0.35 * Math.sin(wobble * 1.2));
+                const offsetX = Math.cos(orbit) * radius + Math.sin(wobble * 1.7) * radiusBase * 0.45;
+                const offsetZ = Math.sin(orbit) * radius * 0.75 + Math.cos(orbit * 1.4 + phaseB) * radiusBase * 0.32;
+                const offsetY = Math.sin(orbit * 1.3 + phaseB) * 0.16 + Math.cos(wobble * 1.5) * 0.08;
+
+                targetArray[idx] = linkedinAnchorTargets[anchorIdx] + offsetX;
+                targetArray[idx + 1] = linkedinAnchorTargets[anchorIdx + 1] + offsetY;
+                targetArray[idx + 2] = linkedinAnchorTargets[anchorIdx + 2] + offsetZ;
+            }
+
+            geometry.attributes.aTarget.needsUpdate = true;
+        };
+
+        const updateLinkedInNetwork = elapsed => {
+            const base = precomputedShapes.linkedin;
+            if (!base) return;
+
+            const connected = new Uint8Array(LINKEDIN_NODE_COUNT);
+            const connectionCounts = new Uint8Array(LINKEDIN_NODE_COUNT);
+            const segmentPairs = [];
+            const seenPairs = new Set();
+
+            for (let i = 0; i < LINKEDIN_NODE_COUNT; i++) {
+                const idx = i * 3;
+                const seed = linkedinMotionSeeds[i];
+                const groupIndex = linkedinPointGroups[i];
+                const centerIdx = groupIndex * 3;
+                const groupOffset = getLinkedinGroupOffset(groupIndex, elapsed);
+                const morph = getLinkedinGroupMorph(groupIndex, elapsed);
+                const localX = linkedinLocalOffsets[idx];
+                const localY = linkedinLocalOffsets[idx + 1];
+                const localZ = linkedinLocalOffsets[idx + 2];
+                const rotatedX = localX * Math.cos(morph.twist) - localZ * Math.sin(morph.twist);
+                const rotatedZ = localX * Math.sin(morph.twist) + localZ * Math.cos(morph.twist);
+                const morphedX = rotatedX * morph.scaleX + rotatedZ * morph.shear;
+                const morphedZ = rotatedZ * morph.scaleZ;
+                const driftX = Math.sin(elapsed * seed.speedB + seed.phaseA) * seed.amplitude;
+                const driftY = Math.cos(elapsed * (seed.speedB - 0.15) + seed.phaseB) * seed.amplitude * 0.35;
+                const driftZ = Math.cos(elapsed * seed.speedB + seed.phaseB) * seed.amplitude;
+
+                linkedinNodePositions[idx] = linkedinGroupCenters[centerIdx] + morphedX + groupOffset.x + driftX;
+                linkedinNodePositions[idx + 1] = linkedinGroupCenters[centerIdx + 1] + localY + morph.lift + groupOffset.y + driftY;
+                linkedinNodePositions[idx + 2] = linkedinGroupCenters[centerIdx + 2] + morphedZ + groupOffset.z + driftZ;
+            }
+
+            for (let i = 0; i < LINKEDIN_NODE_COUNT; i++) {
+                const nearest = [];
+                const i3 = i * 3;
+                const ix = linkedinNodePositions[i3];
+                const iy = linkedinNodePositions[i3 + 1];
+                const iz = linkedinNodePositions[i3 + 2];
+
+                for (let j = i + 1; j < LINKEDIN_NODE_COUNT; j++) {
+                    const j3 = j * 3;
+                    const dx = ix - linkedinNodePositions[j3];
+                    const dz = iz - linkedinNodePositions[j3 + 2];
+                    const distance = Math.sqrt(dx * dx + dz * dz);
+                    if (distance > LINKEDIN_CONNECTION_DISTANCE) continue;
+                    nearest.push({ j, distance });
+                }
+
+                nearest.sort((a, b) => a.distance - b.distance);
+
+                for (let k = 0; k < nearest.length && k < LINKEDIN_MAX_NEIGHBORS; k++) {
+                    const j = nearest[k].j;
+                    if (connectionCounts[i] >= LINKEDIN_MAX_NEIGHBORS || connectionCounts[j] >= LINKEDIN_MAX_NEIGHBORS) continue;
+
+                    const pairKey = `${i}:${j}`;
+                    if (seenPairs.has(pairKey)) continue;
+
+                    seenPairs.add(pairKey);
+                    connectionCounts[i]++;
+                    connectionCounts[j]++;
+                    connected[i] = 1;
+                    connected[j] = 1;
+                    segmentPairs.push([i, j]);
+                    if (segmentPairs.length >= LINKEDIN_MAX_SEGMENTS) break;
+                }
+
+                if (segmentPairs.length >= LINKEDIN_MAX_SEGMENTS) break;
+            }
+
+            const visibleSegments = Math.min(segmentPairs.length, LINKEDIN_MAX_SEGMENTS);
+            for (let i = 0; i < visibleSegments; i++) {
+                const startIdx = segmentPairs[i][0] * 3;
+                const endIdx = segmentPairs[i][1] * 3;
+                const lineIdx = i * 6;
+
+                linkedinLinePositions[lineIdx] = linkedinNodePositions[startIdx];
+                linkedinLinePositions[lineIdx + 1] = linkedinNodePositions[startIdx + 1];
+                linkedinLinePositions[lineIdx + 2] = linkedinNodePositions[startIdx + 2];
+                linkedinLinePositions[lineIdx + 3] = linkedinNodePositions[endIdx];
+                linkedinLinePositions[lineIdx + 4] = linkedinNodePositions[endIdx + 1];
+                linkedinLinePositions[lineIdx + 5] = linkedinNodePositions[endIdx + 2];
+            }
+
+            linkedinLineGeometry.attributes.position.needsUpdate = true;
+            linkedinLineGeometry.setDrawRange(0, visibleSegments * 2);
+            linkedinLineMaterial.opacity = linkedinNetworkVisibility * 0.7;
+
+            for (let i = 0; i < LINKEDIN_NODE_COUNT; i++) {
+                const idx = i * 3;
+                const colorMix = connected[i] ? linkedinNetworkVisibility : 0;
+                pointColors[idx] = THREE.MathUtils.lerp(nodeBlack.r, linkedinBlue.r, colorMix);
+                pointColors[idx + 1] = THREE.MathUtils.lerp(nodeBlack.g, linkedinBlue.g, colorMix);
+                pointColors[idx + 2] = THREE.MathUtils.lerp(nodeBlack.b, linkedinBlue.b, colorMix);
+            }
+
+            geometry.attributes.color.needsUpdate = true;
+        };
+
+        // 交互监听
+        document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; isInside = true; });
+        document.addEventListener('mouseleave', () => isInside = false);
+        window.addEventListener('resize', () => { updateZones(); renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); });
+
+        const clock = new THREE.Clock();
+        const tick = () => {
+            requestAnimationFrame(tick);
+            const delta = clock.getDelta();
+            const elapsed = clock.getElapsedTime();
+
+            delayedPos.x += (mouse.x - delayedPos.x) * lerpFactor;
+            delayedPos.y += (mouse.y - delayedPos.y) * lerpFactor;
+            cursorEl.style.transform = `translate3d(${delayedPos.x}px, ${delayedPos.y}px, 0) translate(-50%, -50%)`;
+            cursorEl.style.opacity = isInside ? '1' : '0';
+            cursorEl.style.visibility = isInside ? 'visible' : 'hidden';
+
+            let hit = false;
+            hitZones.forEach(z => {
+                if (delayedPos.x > z.left && delayedPos.x < z.right && delayedPos.y > z.top && delayedPos.y < z.bottom) {
+                    hit = true; transitionTo(z.shape); z.el.classList.add('is-active');
+                } else { z.el.classList.remove('is-active'); }
+            });
+            if (!hit) transitionTo('grid');
+
+            material.uniforms.uTime.value = elapsed;
+            const targetProg = (currentShape === 'grid') ? 0 : 1;
+            const progressSpeed = (targetProg === 1) ? hoverInProgressSpeed : hoverOutProgressSpeed;
+            material.uniforms.uProgress.value += (targetProg - material.uniforms.uProgress.value) * progressSpeed;
+            const linkedinTargetVisibility = (currentShape === 'linkedin') ? 1 : 0;
+            linkedinNetworkVisibility += (linkedinTargetVisibility - linkedinNetworkVisibility) * 0.09;
+            material.uniforms.uLinkedinMix.value = linkedinNetworkVisibility;
+
+            // 旋转速度与正面修正逻辑
+            const currentSpeed = (currentShape === 'en') ? earthRotationSpeed : baseRotationSpeed;
+            if (currentShape !== 'linkedin') totalRotation += delta * currentSpeed;
+            
+            let targetRot;
+            if (currentShape === 'linkedin') {
+                targetRot = 0;
+            } else if (currentShape === 'home') {
+                const fullCircle = Math.PI * 2;
+                targetRot = Math.round(totalRotation / fullCircle) * fullCircle;
+            } else {
+                targetRot = totalRotation;
+            }
+
+            if (currentShape === 'linkedin') {
+                updateLinkedInTargets(elapsed);
+                updateLinkedInNetwork(elapsed);
+            } else if (linkedinNetworkVisibility > 0.001) {
+                linkedinLineMaterial.opacity = linkedinNetworkVisibility * 0.7;
+            } else {
+                linkedinLineMaterial.opacity = 0;
+                linkedinLineGeometry.setDrawRange(0, 0);
+                for (let i = 0; i < LINKEDIN_NODE_COUNT; i++) {
+                    const idx = i * 3;
+                    pointColors[idx] = nodeBlack.r;
+                    pointColors[idx + 1] = nodeBlack.g;
+                    pointColors[idx + 2] = nodeBlack.b;
+                }
+                geometry.attributes.color.needsUpdate = true;
+            }
+
+            particleRig.rotation.x = THREE.MathUtils.lerp(
+                particleRig.rotation.x,
+                currentShape === 'linkedin' ? Math.PI / 2 : 0,
+                currentShape === 'linkedin' ? 0.12 : 0.08
+            );
+            particleRig.rotation.y = THREE.MathUtils.lerp(particleRig.rotation.y, targetRot, 0.1);
+            renderer.render(scene, camera);
+        };
+
+        const updateZones = () => {
+            hitZones = Array.from(navLinks).map(a => {
+                const rect = a.getBoundingClientRect();
+                let shape = 'grid';
+                if(a.parentElement.classList.contains('nav-home')) shape = 'home';
+                if(a.parentElement.classList.contains('nav-linkedin')) shape = 'linkedin';
+                if(a.parentElement.classList.contains('nav-en')) shape = 'en';
+                return { el: a.querySelector('.nav-inner'), shape, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+            });
+        };
+
+        updateZones(); tick();
+    </script>
+</body>
+</html>

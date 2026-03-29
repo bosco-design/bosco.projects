@@ -55,6 +55,8 @@ html, body, a, button { cursor: auto !important; }
 .navbar li.nav-spacing { flex: 2.5; }
 .navbar li.nav-linkedin { flex: 0.5; }
 .navbar li.nav-en { flex: 0.5; }
+.navbar li.nav-en a,
+.navbar li.nav-en a * { cursor: pointer !important; }
 
 /* 矢量图标尺寸与颜色 */
 .nav-icon { height: 42px; width: 42px; display: block; color: inherit; }

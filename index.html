@@ -30,7 +30,7 @@
             </li>
             <li class="nav-spacing"><a><span class="nav-inner"></span></a></li>
             <li class="nav-snap"><a href="snap"><span class="nav-inner">TAKE A SHOT!</span></a></li>
-            <li class="nav-contact"><a href="#contact"><span class="nav-inner">CONTACT</span></a></li>
+            <li class="nav-contact"><a href="mailto:yuchuan.event@gmail.com"><span class="nav-inner">CONTACT</span></a></li>
             <li class="nav-linkedin">
                 <a href="https://www.linkedin.com/in/bosco-zhang" target="_blank" rel="noopener noreferrer">
                     <span class="nav-inner">
@@ -77,7 +77,7 @@
         const baseRotationSpeed = 0.05;
         const earthRotationSpeed = 0.6;
         const hoverInProgressSpeed = 0.08;
-        const hoverOutProgressSpeed = 0.035;
+        const hoverOutProgressSpeed = 0.065;
         const LINKEDIN_NODE_COUNT = 54;
         const LINKEDIN_MAX_SEGMENTS = 72;
         const LINKEDIN_CONNECTION_DISTANCE = 2.75;
@@ -95,6 +95,7 @@
         const linkedinDustMode = new Float32Array(PARTICLE_COUNT);
         let totalRotation = 0;
         let currentShape = 'grid';
+        let hoveredShape = 'grid';
         let hitZones = [];
         let linkedinNetworkVisibility = 0;
 
@@ -121,6 +122,71 @@
                 data[i * 3 + 1] = -radius * Math.sin(lat);
                 data[i * 3 + 2] = radius * Math.cos(lat) * Math.sin(lon);
             }
+            return data;
+        };
+
+        const getCanvasPoints = sourceCanvas => {
+            const samplingCanvas = document.createElement('canvas');
+            const ctx = samplingCanvas.getContext('2d');
+            samplingCanvas.width = 720;
+            samplingCanvas.height = 280;
+            ctx.drawImage(sourceCanvas, 0, 0, samplingCanvas.width, samplingCanvas.height);
+
+            const pixels = ctx.getImageData(0, 0, samplingCanvas.width, samplingCanvas.height).data;
+            const litPoints = [];
+            for (let y = 0; y < samplingCanvas.height; y += 2) {
+                for (let x = 0; x < samplingCanvas.width; x += 2) {
+                    const alpha = pixels[(y * samplingCanvas.width + x) * 4 + 3];
+                    if (alpha > 80) litPoints.push({ x, y });
+                }
+            }
+
+            const data = new Float32Array(PARTICLE_COUNT * 3);
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const sample = litPoints[Math.floor(Math.random() * litPoints.length)];
+                data[i * 3] = (sample.x - samplingCanvas.width / 2) * 0.04;
+                data[i * 3 + 1] = -(sample.y - samplingCanvas.height / 2) * 0.04;
+                data[i * 3 + 2] = (Math.random() - 0.5) * 1.2;
+            }
+            return data;
+        };
+
+        const buildContactSendPoints = () => {
+            const data = new Float32Array(PARTICLE_COUNT * 3);
+            const coreCenter = { x: -2.2, y: 0.0, z: 0.0 };
+            const launchAngle = -0.42;
+            const launchDir = { x: Math.cos(launchAngle), y: Math.sin(launchAngle) };
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const idx = i * 3;
+                const modeSeed = Math.random();
+
+                if (modeSeed < 0.62) {
+                    // Dense message core.
+                    const radius = Math.pow(Math.random(), 0.7) * 2.9;
+                    const angle = Math.random() * Math.PI * 2;
+                    data[idx] = coreCenter.x + Math.cos(angle) * radius * 1.2;
+                    data[idx + 1] = coreCenter.y + (Math.random() - 0.5) * 1.2;
+                    data[idx + 2] = coreCenter.z + Math.sin(angle) * radius * 0.9;
+                } else if (modeSeed < 0.86) {
+                    // Outgoing emission beam.
+                    const t = Math.pow(Math.random(), 0.85) * 9.5 + 1.0;
+                    const spread = (Math.random() - 0.5) * (1.8 - t * 0.11);
+                    data[idx] = coreCenter.x + launchDir.x * t - launchDir.y * spread;
+                    data[idx + 1] = (Math.random() - 0.5) * 0.65;
+                    data[idx + 2] = coreCenter.z + launchDir.y * t + launchDir.x * spread;
+                } else {
+                    // Small burst around the emission front.
+                    const frontX = coreCenter.x + launchDir.x * 9.4;
+                    const frontZ = coreCenter.z + launchDir.y * 9.4;
+                    const radius = Math.random() * 1.5;
+                    const angle = Math.random() * Math.PI * 2;
+                    data[idx] = frontX + Math.cos(angle) * radius * 1.1;
+                    data[idx + 1] = (Math.random() - 0.5) * 0.45;
+                    data[idx + 2] = frontZ + Math.sin(angle) * radius * 0.85;
+                }
+            }
+
             return data;
         };
 
@@ -179,6 +245,15 @@
                 twist: Math.sin(elapsed * (0.24 + groupIndex * 0.012) + phase * 0.6) * 0.18,
                 lift: Math.cos(elapsed * (0.34 + groupIndex * 0.022) + phase) * 0.14
             };
+        };
+
+        const normalizeAngle = angle => {
+            return THREE.MathUtils.euclideanModulo(angle + Math.PI, Math.PI * 2) - Math.PI;
+        };
+
+        const lerpAngle = (current, target, alpha) => {
+            const delta = normalizeAngle(target - current);
+            return current + delta * alpha;
         };
 
         const cacheLinkedinGroupGeometry = data => {
@@ -279,13 +354,14 @@
             const bLen = bPath.getTotalLength();
             const bData = new Float32Array(PARTICLE_COUNT * 3);
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const p = bPath.getPointAtLength((i / PARTICLE_COUNT) * bLen);
+                const p = bPath.getPointAtLength((1 - i / PARTICLE_COUNT) * bLen);
                 const tIdx = indices[i] * 3;
                 bData[tIdx] = (p.x - 395) * 0.025;
                 bData[tIdx + 1] = -(p.y - 395) * 0.025;
                 bData[tIdx + 2] = (Math.random() - 0.5) * 2.0;
             }
             precomputedShapes.home = bData;
+            precomputedShapes.contact = buildContactSendPoints();
             precomputedShapes.linkedin = buildLinkedInPoints();
             cacheLinkedinGroupGeometry(precomputedShapes.linkedin);
 
@@ -305,28 +381,46 @@
         geometry.setAttribute('aMotion', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 4), 4));
         geometry.setAttribute('aNetworkNode', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT), 1));
         geometry.setAttribute('aPointScale', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT), 1));
+        geometry.setAttribute('aHomeMotion', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 4), 4));
 
         const pointColors = geometry.attributes.color.array;
         const pointMotion = geometry.attributes.aMotion.array;
         const pointNetworkNode = geometry.attributes.aNetworkNode.array;
         const pointScale = geometry.attributes.aPointScale.array;
+        const pointHomeMotion = geometry.attributes.aHomeMotion.array;
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             const idx = i * 3;
+            const motionIdx = i * 4;
             pointColors[idx] = nodeBlack.r;
             pointColors[idx + 1] = nodeBlack.g;
             pointColors[idx + 2] = nodeBlack.b;
             pointScale[i] = 0.74 + Math.random() * 0.18;
+            pointHomeMotion[motionIdx] = Math.random() * Math.PI * 2;
+            pointHomeMotion[motionIdx + 1] = Math.random() * Math.PI * 2;
+            pointHomeMotion[motionIdx + 2] = 0.45 + Math.random() * 0.55;
+            pointHomeMotion[motionIdx + 3] = 0.035 + Math.random() * 0.09;
         }
 
         const material = new THREE.ShaderMaterial({
             transparent: true, depthWrite: false, blending: THREE.NormalBlending,
-            uniforms: { uTime: { value: 0 }, uProgress: { value: 0 }, uLinkedinMix: { value: 0 } },
+            uniforms: {
+                uTime: { value: 0 },
+                uProgress: { value: 0 },
+                uLinkedinMix: { value: 0 },
+                uWaveStrength: { value: 1 },
+                uHomeMotionStrength: { value: 0 }
+            },
             vertexShader: `
-                uniform float uTime; uniform float uProgress; uniform float uLinkedinMix; attribute vec3 aTarget; attribute vec3 color; attribute vec4 aMotion; attribute float aNetworkNode; attribute float aPointScale; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix;
+                uniform float uTime; uniform float uProgress; uniform float uLinkedinMix; uniform float uWaveStrength; uniform float uHomeMotionStrength; attribute vec3 aTarget; attribute vec3 color; attribute vec4 aMotion; attribute vec4 aHomeMotion; attribute float aNetworkNode; attribute float aPointScale; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix;
                 void main() {
-                    vec3 wavePos = position;
-                    wavePos.y += sin(wavePos.x + uTime * 1.2) * 0.3 + cos(wavePos.z + uTime * 1.5) * 0.3;
-                    vec3 finalPos = mix(wavePos, aTarget, uProgress);
+                    vec3 finalPos = mix(position, aTarget, uProgress);
+                    vec3 homeDrift = vec3(
+                        sin(uTime * aHomeMotion.z + aHomeMotion.x) * aHomeMotion.w,
+                        cos(uTime * (aHomeMotion.z * 1.13) + aHomeMotion.y) * aHomeMotion.w,
+                        sin(uTime * (aHomeMotion.z * 0.87) + aHomeMotion.x + aHomeMotion.y) * aHomeMotion.w
+                    );
+                    finalPos += homeDrift * uHomeMotionStrength;
+                    finalPos.y += (sin(finalPos.x + uTime * 1.2) * 0.3 + cos(finalPos.z + uTime * 1.5) * 0.3) * uWaveStrength;
                     vec3 linkedinDrift = vec3(
                         sin(uTime * aMotion.z + aMotion.x) * aMotion.w,
                         cos(uTime * (aMotion.z - 0.15) + aMotion.y) * aMotion.w * 0.35,
@@ -605,36 +699,44 @@
             cursorEl.style.visibility = isInside ? 'visible' : 'hidden';
 
             let hit = false;
+            hoveredShape = 'grid';
             hitZones.forEach(z => {
                 if (delayedPos.x > z.left && delayedPos.x < z.right && delayedPos.y > z.top && delayedPos.y < z.bottom) {
-                    hit = true; transitionTo(z.shape); z.el.classList.add('is-active');
+                    hit = true;
+                    hoveredShape = z.shape;
+                    transitionTo(z.shape);
+                    z.el.classList.add('is-active');
                 } else { z.el.classList.remove('is-active'); }
             });
-            if (!hit) transitionTo('grid');
 
             material.uniforms.uTime.value = elapsed;
-            const targetProg = (currentShape === 'grid') ? 0 : 1;
+            const targetProg = (hoveredShape === 'grid') ? 0 : 1;
             const progressSpeed = (targetProg === 1) ? hoverInProgressSpeed : hoverOutProgressSpeed;
             material.uniforms.uProgress.value += (targetProg - material.uniforms.uProgress.value) * progressSpeed;
-            const linkedinTargetVisibility = (currentShape === 'linkedin') ? 1 : 0;
+            const linkedinTargetVisibility = (hoveredShape === 'linkedin') ? 1 : 0;
             linkedinNetworkVisibility += (linkedinTargetVisibility - linkedinNetworkVisibility) * 0.09;
             material.uniforms.uLinkedinMix.value = linkedinNetworkVisibility;
+            const motionShape = (hoveredShape === 'grid') ? 'grid' : currentShape;
+            material.uniforms.uWaveStrength.value = motionShape === 'grid' ? 1 : 0;
+            material.uniforms.uHomeMotionStrength.value = motionShape === 'home' ? 1 : 0;
 
             // 旋转速度与正面修正逻辑
-            const currentSpeed = (currentShape === 'en') ? earthRotationSpeed : baseRotationSpeed;
-            if (currentShape !== 'linkedin') totalRotation += delta * currentSpeed;
+            const currentSpeed = (motionShape === 'en') ? earthRotationSpeed : baseRotationSpeed;
+            if (motionShape !== 'linkedin') {
+                totalRotation = normalizeAngle(totalRotation + delta * currentSpeed);
+            }
             
             let targetRot;
-            if (currentShape === 'linkedin') {
+            if (motionShape === 'linkedin' || motionShape === 'contact') {
                 targetRot = 0;
-            } else if (currentShape === 'home') {
+            } else if (motionShape === 'home') {
                 const fullCircle = Math.PI * 2;
-                targetRot = Math.round(totalRotation / fullCircle) * fullCircle;
+                targetRot = normalizeAngle(Math.round(totalRotation / fullCircle) * fullCircle);
             } else {
-                targetRot = totalRotation;
+                targetRot = normalizeAngle(totalRotation);
             }
 
-            if (currentShape === 'linkedin') {
+            if (hoveredShape === 'linkedin') {
                 updateLinkedInTargets(elapsed);
                 updateLinkedInNetwork(elapsed);
             } else if (linkedinNetworkVisibility > 0.001) {
@@ -653,10 +755,14 @@
 
             particleRig.rotation.x = THREE.MathUtils.lerp(
                 particleRig.rotation.x,
-                currentShape === 'linkedin' ? Math.PI / 2 : 0,
-                currentShape === 'linkedin' ? 0.12 : 0.08
+                hoveredShape === 'linkedin' ? Math.PI / 2 : 0,
+                hoveredShape === 'linkedin' ? 0.12 : 0.045
             );
-            particleRig.rotation.y = THREE.MathUtils.lerp(particleRig.rotation.y, targetRot, 0.1);
+            particleRig.rotation.y = lerpAngle(
+                particleRig.rotation.y,
+                targetRot,
+                motionShape === 'grid' ? 0.05 : 0.1
+            );
             renderer.render(scene, camera);
         };
 
@@ -665,6 +771,7 @@
                 const rect = a.getBoundingClientRect();
                 let shape = 'grid';
                 if(a.parentElement.classList.contains('nav-home')) shape = 'home';
+                if(a.parentElement.classList.contains('nav-contact')) shape = 'contact';
                 if(a.parentElement.classList.contains('nav-linkedin')) shape = 'linkedin';
                 if(a.parentElement.classList.contains('nav-en')) shape = 'en';
                 return { el: a.querySelector('.nav-inner'), shape, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };

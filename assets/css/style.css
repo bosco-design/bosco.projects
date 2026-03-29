@@ -27,6 +27,49 @@ html, body, a, button { cursor: auto !important; }
 /* 全屏WebGL背景 */
 #webgl-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
 
+.contact-email {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #111111;
+    letter-spacing: 0.01em;
+    text-align: center;
+}
+
+.contact-cursor {
+    display: inline-block;
+    width: 0.34em;
+    height: 0.84em;
+    margin-left: 0.28em;
+    background: currentColor;
+    vertical-align: -0.04em;
+    animation: contact-cursor-blink 0.9s steps(1, end) infinite;
+}
+
+@keyframes contact-cursor-blink {
+    0%, 44% { opacity: 1; }
+    45%, 100% { opacity: 0; }
+}
+
+.contact-hint {
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
 /* 导航栏固定容器 */
 .navbar { position: relative; top: 5px; width: 100%; z-index: 1000; }
 

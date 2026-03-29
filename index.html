@@ -11,6 +11,10 @@
 
 <body>
     <canvas id="webgl-canvas"></canvas>
+    <div class="contact-email" id="contact-email" aria-hidden="true">
+        yuchuan.event@gmail.com<span class="contact-cursor" id="contact-cursor"></span>
+        <div class="contact-hint">or click CONTACT to write.</div>
+    </div>
 
     <nav class="navbar">
         <ul>
@@ -55,11 +59,12 @@
 
         // 场景与相机基础配置
         const canvas = document.querySelector('#webgl-canvas');
+        const contactEmailEl = document.getElementById('contact-email');
         const cursorEl = document.getElementById('cursor');
         const navLinks = document.querySelectorAll('.navbar li a');
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 0, 20);
+        camera.position.set(0, 0, 16);
 
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -125,7 +130,11 @@
             return data;
         };
 
-        const getCanvasPoints = sourceCanvas => {
+        const getCanvasPoints = (sourceCanvas, options = {}) => {
+            const sampleStep = options.sampleStep || 2;
+            const alphaThreshold = options.alphaThreshold || 80;
+            const pointScale = options.pointScale || 0.04;
+            const depth = options.depth || 1.2;
             const samplingCanvas = document.createElement('canvas');
             const ctx = samplingCanvas.getContext('2d');
             samplingCanvas.width = 720;
@@ -134,60 +143,54 @@
 
             const pixels = ctx.getImageData(0, 0, samplingCanvas.width, samplingCanvas.height).data;
             const litPoints = [];
-            for (let y = 0; y < samplingCanvas.height; y += 2) {
-                for (let x = 0; x < samplingCanvas.width; x += 2) {
+            for (let y = 0; y < samplingCanvas.height; y += sampleStep) {
+                for (let x = 0; x < samplingCanvas.width; x += sampleStep) {
                     const alpha = pixels[(y * samplingCanvas.width + x) * 4 + 3];
-                    if (alpha > 80) litPoints.push({ x, y });
+                    if (alpha > alphaThreshold) litPoints.push({ x, y });
                 }
             }
 
             const data = new Float32Array(PARTICLE_COUNT * 3);
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const sample = litPoints[Math.floor(Math.random() * litPoints.length)];
-                data[i * 3] = (sample.x - samplingCanvas.width / 2) * 0.04;
-                data[i * 3 + 1] = -(sample.y - samplingCanvas.height / 2) * 0.04;
-                data[i * 3 + 2] = (Math.random() - 0.5) * 1.2;
+                data[i * 3] = (sample.x - samplingCanvas.width / 2) * pointScale;
+                data[i * 3 + 1] = -(sample.y - samplingCanvas.height / 2) * pointScale;
+                data[i * 3 + 2] = (Math.random() - 0.5) * depth;
             }
             return data;
         };
 
-        const buildContactSendPoints = () => {
-            const data = new Float32Array(PARTICLE_COUNT * 3);
-            const coreCenter = { x: -2.2, y: 0.0, z: 0.0 };
-            const launchAngle = -0.42;
-            const launchDir = { x: Math.cos(launchAngle), y: Math.sin(launchAngle) };
+        const buildContactEmailAsciiPoints = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1200;
+            canvas.height = 220;
 
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const idx = i * 3;
-                const modeSeed = Math.random();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#000000';
 
-                if (modeSeed < 0.62) {
-                    // Dense message core.
-                    const radius = Math.pow(Math.random(), 0.7) * 2.9;
-                    const angle = Math.random() * Math.PI * 2;
-                    data[idx] = coreCenter.x + Math.cos(angle) * radius * 1.2;
-                    data[idx + 1] = coreCenter.y + (Math.random() - 0.5) * 1.2;
-                    data[idx + 2] = coreCenter.z + Math.sin(angle) * radius * 0.9;
-                } else if (modeSeed < 0.86) {
-                    // Outgoing emission beam.
-                    const t = Math.pow(Math.random(), 0.85) * 9.5 + 1.0;
-                    const spread = (Math.random() - 0.5) * (1.8 - t * 0.11);
-                    data[idx] = coreCenter.x + launchDir.x * t - launchDir.y * spread;
-                    data[idx + 1] = (Math.random() - 0.5) * 0.65;
-                    data[idx + 2] = coreCenter.z + launchDir.y * t + launchDir.x * spread;
-                } else {
-                    // Small burst around the emission front.
-                    const frontX = coreCenter.x + launchDir.x * 9.4;
-                    const frontZ = coreCenter.z + launchDir.y * 9.4;
-                    const radius = Math.random() * 1.5;
-                    const angle = Math.random() * Math.PI * 2;
-                    data[idx] = frontX + Math.cos(angle) * radius * 1.1;
-                    data[idx + 1] = (Math.random() - 0.5) * 0.45;
-                    data[idx + 2] = frontZ + Math.sin(angle) * radius * 0.85;
-                }
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '400 38px "Press Start 2P", monospace';
+            const emailText = 'yuchuan.event@gmail.com';
+            const letterSpacing = 4;
+            const measuredWidth = ctx.measureText(emailText).width;
+            const totalWidth = measuredWidth + letterSpacing * (emailText.length - 1);
+            let cursorX = canvas.width / 2 - totalWidth / 2;
+
+            for (let i = 0; i < emailText.length; i++) {
+                const char = emailText[i];
+                const charWidth = ctx.measureText(char).width;
+                ctx.fillText(char, cursorX + charWidth / 2, canvas.height / 2);
+                cursorX += charWidth + letterSpacing;
             }
 
-            return data;
+            return getCanvasPoints(canvas, {
+                sampleStep: 4,
+                alphaThreshold: 110,
+                pointScale: 0.044,
+                depth: 0.08
+            });
         };
 
         const isPointInPolygon = (x, y, polygon) => {
@@ -361,7 +364,6 @@
                 bData[tIdx + 2] = (Math.random() - 0.5) * 2.0;
             }
             precomputedShapes.home = bData;
-            precomputedShapes.contact = buildContactSendPoints();
             precomputedShapes.linkedin = buildLinkedInPoints();
             cacheLinkedinGroupGeometry(precomputedShapes.linkedin);
 
@@ -473,12 +475,25 @@
             depthTest: false
         });
         const linkedinLines = new THREE.LineSegments(linkedinLineGeometry, linkedinLineMaterial);
+        const contactCursor = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.18, 2.35),
+            new THREE.MeshBasicMaterial({
+                color: 0x111111,
+                transparent: true,
+                opacity: 0,
+                depthWrite: false,
+                depthTest: false
+            })
+        );
+        contactCursor.position.set(9.95, -0.05, -0.8);
         const particleRig = new THREE.Group();
         particleRig.add(points);
         particleRig.add(linkedinLines);
+        particleRig.add(contactCursor);
         scene.add(particleRig);
         points.renderOrder = 10;
         linkedinLines.renderOrder = 11;
+        contactCursor.renderOrder = 9;
 
         const linkedinMotionSeeds = Array.from({ length: LINKEDIN_NODE_COUNT }, () => ({
             phaseA: Math.random() * Math.PI * 2,
@@ -699,12 +714,17 @@
             cursorEl.style.visibility = isInside ? 'visible' : 'hidden';
 
             let hit = false;
+            let isContactHovered = false;
             hoveredShape = 'grid';
             hitZones.forEach(z => {
                 if (delayedPos.x > z.left && delayedPos.x < z.right && delayedPos.y > z.top && delayedPos.y < z.bottom) {
                     hit = true;
-                    hoveredShape = z.shape;
-                    transitionTo(z.shape);
+                    if (z.shape === 'contact') {
+                        isContactHovered = true;
+                    } else {
+                        hoveredShape = z.shape;
+                        transitionTo(z.shape);
+                    }
                     z.el.classList.add('is-active');
                 } else { z.el.classList.remove('is-active'); }
             });
@@ -719,6 +739,7 @@
             const motionShape = (hoveredShape === 'grid') ? 'grid' : currentShape;
             material.uniforms.uWaveStrength.value = motionShape === 'grid' ? 1 : 0;
             material.uniforms.uHomeMotionStrength.value = motionShape === 'home' ? 1 : 0;
+            contactEmailEl.style.opacity = isContactHovered ? '1' : '0';
 
             // 旋转速度与正面修正逻辑
             const currentSpeed = (motionShape === 'en') ? earthRotationSpeed : baseRotationSpeed;
@@ -753,10 +774,31 @@
                 geometry.attributes.color.needsUpdate = true;
             }
 
+            const contactCursorTargetOpacity = hoveredShape === 'contact'
+                ? 0.18 + (Math.sin(elapsed * 3.1) * 0.5 + 0.5) * 0.24
+                : 0;
+            contactCursor.material.opacity = THREE.MathUtils.lerp(
+                contactCursor.material.opacity,
+                contactCursorTargetOpacity,
+                hoveredShape === 'contact' ? 0.16 : 0.12
+            );
+            contactCursor.visible = contactCursor.material.opacity > 0.01;
+
+            const targetCameraFov = isContactHovered ? 60 : 75;
+            const targetCameraZ = isContactHovered ? 17.2 : 16;
+            camera.fov = THREE.MathUtils.lerp(camera.fov, targetCameraFov, isContactHovered ? 0.06 : 0.08);
+            camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetCameraZ, isContactHovered ? 0.06 : 0.08);
+            camera.updateProjectionMatrix();
+
             particleRig.rotation.x = THREE.MathUtils.lerp(
                 particleRig.rotation.x,
                 hoveredShape === 'linkedin' ? Math.PI / 2 : 0,
                 hoveredShape === 'linkedin' ? 0.12 : 0.045
+            );
+            particleRig.position.y = THREE.MathUtils.lerp(
+                particleRig.position.y,
+                isContactHovered ? -4.4 : 0,
+                isContactHovered ? 0.08 : 0.065
             );
             particleRig.rotation.y = lerpAngle(
                 particleRig.rotation.y,

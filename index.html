@@ -11,6 +11,10 @@
 
 <body>
     <canvas id="webgl-canvas"></canvas>
+    <div class="shot-flash" id="shot-flash" aria-hidden="true"></div>
+    <div class="shot-slot" id="shot-slot" aria-hidden="true"></div>
+    <div class="shot-slot-lip" id="shot-slot-lip" aria-hidden="true"></div>
+    <div class="shot-print" id="shot-print" aria-hidden="true"></div>
     <div class="contact-email" id="contact-email" aria-hidden="true">
         yuchuan.event@gmail.com<span class="contact-cursor" id="contact-cursor"></span>
         <div class="contact-hint">or click CONTACT to write.</div>
@@ -60,6 +64,10 @@
         // 场景与相机基础配置
         const canvas = document.querySelector('#webgl-canvas');
         const contactEmailEl = document.getElementById('contact-email');
+        const shotFlashEl = document.getElementById('shot-flash');
+        const shotSlotEl = document.getElementById('shot-slot');
+        const shotSlotLipEl = document.getElementById('shot-slot-lip');
+        const shotPrintEl = document.getElementById('shot-print');
         const cursorEl = document.getElementById('cursor');
         const navLinks = document.querySelectorAll('.navbar li a');
         const scene = new THREE.Scene();
@@ -103,6 +111,19 @@
         let hoveredShape = 'grid';
         let hitZones = [];
         let linkedinNetworkVisibility = 0;
+        let rafId = null;
+        let isSleeping = false;
+        let sleepPending = false;
+        let sceneVisibility = 1;
+        let lastInteractionAt = performance.now();
+        const inactivitySleepMs = 60000;
+        let shotSequenceStart = null;
+
+        let earthMapImage = null;
+        const getEarthRadius = () => {
+            const viewportHeight = window.innerHeight;
+            return THREE.MathUtils.clamp(viewportHeight * 0.0088, 4.6, 7.4);
+        };
 
         // 陆地采样函数
         const getEarthPoints = (sourceCanvas) => {
@@ -118,7 +139,7 @@
                 }
             }
             const data = new Float32Array(PARTICLE_COUNT * 3);
-            const radius = 8.5; // 缩小地球半径使视觉更精致
+            const radius = getEarthRadius();
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const sample = landPoints[Math.floor(Math.random() * landPoints.length)];
                 const lon = sample.u * Math.PI * 2 - Math.PI;
@@ -369,7 +390,10 @@
 
             // 使用项目内本地 SVG 地图素材，保留真实大陆轮廓并避免 Safari 的跨域限制
             const img = new Image();
-            img.onload = () => { precomputedShapes.en = getEarthPoints(img); };
+            img.onload = () => {
+                earthMapImage = img;
+                precomputedShapes.en = getEarthPoints(img);
+            };
             img.onerror = () => { precomputedShapes.en = precomputedShapes.grid; };
             img.src = 'assets/images/world-map.svg';
         };
@@ -410,10 +434,11 @@
                 uProgress: { value: 0 },
                 uLinkedinMix: { value: 0 },
                 uWaveStrength: { value: 1 },
-                uHomeMotionStrength: { value: 0 }
+                uHomeMotionStrength: { value: 0 },
+                uSceneOpacity: { value: 1 }
             },
             vertexShader: `
-                uniform float uTime; uniform float uProgress; uniform float uLinkedinMix; uniform float uWaveStrength; uniform float uHomeMotionStrength; attribute vec3 aTarget; attribute vec3 color; attribute vec4 aMotion; attribute vec4 aHomeMotion; attribute float aNetworkNode; attribute float aPointScale; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix;
+                uniform float uTime; uniform float uProgress; uniform float uLinkedinMix; uniform float uWaveStrength; uniform float uHomeMotionStrength; uniform float uSceneOpacity; attribute vec3 aTarget; attribute vec3 color; attribute vec4 aMotion; attribute vec4 aHomeMotion; attribute float aNetworkNode; attribute float aPointScale; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix;
                 void main() {
                     vec3 finalPos = mix(position, aTarget, uProgress);
                     vec3 homeDrift = vec3(
@@ -439,7 +464,7 @@
                     gl_PointSize = mix(linkedinPointSize, defaultPointSize * 0.68, hiddenMix);
                     gl_Position = projectionMatrix * mvPos;
                     vColor = color;
-                    vAlpha = mix(mix(0.88, 0.94, linkedinNodeMix), 0.5, hiddenMix);
+                    vAlpha = mix(mix(0.88, 0.94, linkedinNodeMix), 0.5, hiddenMix) * uSceneOpacity;
                     vLinkedinNodeMix = linkedinNodeMix;
                     vHiddenMix = hiddenMix;
                 }
@@ -683,7 +708,7 @@
 
             linkedinLineGeometry.attributes.position.needsUpdate = true;
             linkedinLineGeometry.setDrawRange(0, visibleSegments * 2);
-            linkedinLineMaterial.opacity = linkedinNetworkVisibility * 0.7;
+            linkedinLineMaterial.opacity = linkedinNetworkVisibility * 0.7 * sceneVisibility;
 
             for (let i = 0; i < LINKEDIN_NODE_COUNT; i++) {
                 const idx = i * 3;
@@ -696,14 +721,77 @@
             geometry.attributes.color.needsUpdate = true;
         };
 
+        const markInteraction = (event = null) => {
+            lastInteractionAt = performance.now();
+            sleepPending = false;
+            if (event && 'clientX' in event && 'clientY' in event) {
+                mouse.x = event.clientX;
+                mouse.y = event.clientY;
+                isInside = true;
+            }
+            if (isSleeping && !document.hidden) {
+                isSleeping = false;
+                clock.getDelta();
+                if (!rafId) tick();
+            }
+        };
+
         // 交互监听
-        document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; isInside = true; });
+        document.addEventListener('mousemove', e => markInteraction(e));
+        document.addEventListener('mousedown', e => markInteraction(e));
+        document.addEventListener('touchstart', () => markInteraction(), { passive: true });
+        document.addEventListener('keydown', () => markInteraction());
+        document.addEventListener('wheel', () => markInteraction(), { passive: true });
         document.addEventListener('mouseleave', () => isInside = false);
-        window.addEventListener('resize', () => { updateZones(); renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); });
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                sleepPending = true;
+                return;
+            }
+            markInteraction();
+        });
+        window.addEventListener('resize', () => {
+            updateZones();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            if (earthMapImage) {
+                precomputedShapes.en = getEarthPoints(earthMapImage);
+                if (currentShape === 'en' || hoveredShape === 'en') {
+                    geometry.attributes.aTarget.array.set(precomputedShapes.en);
+                    geometry.attributes.aTarget.needsUpdate = true;
+                }
+            }
+        });
 
         const clock = new THREE.Clock();
         const tick = () => {
-            requestAnimationFrame(tick);
+            rafId = requestAnimationFrame(tick);
+
+            if (performance.now() - lastInteractionAt >= inactivitySleepMs) {
+                sleepPending = true;
+            }
+
+            const targetSceneVisibility = sleepPending || document.hidden ? 0 : 1;
+            sceneVisibility = THREE.MathUtils.lerp(
+                sceneVisibility,
+                targetSceneVisibility,
+                targetSceneVisibility > sceneVisibility ? 0.11 : 0.045
+            );
+            material.uniforms.uSceneOpacity.value = sceneVisibility;
+
+            if ((sleepPending || document.hidden) && sceneVisibility <= 0.015) {
+                isSleeping = true;
+                if (rafId) {
+                    cancelAnimationFrame(rafId);
+                    rafId = null;
+                }
+                return;
+            }
+
+            isSleeping = false;
+
             const delta = clock.getDelta();
             const elapsed = clock.getElapsedTime();
 
@@ -715,12 +803,15 @@
 
             let hit = false;
             let isContactHovered = false;
+            let isShotHovered = false;
             hoveredShape = 'grid';
             hitZones.forEach(z => {
                 if (delayedPos.x > z.left && delayedPos.x < z.right && delayedPos.y > z.top && delayedPos.y < z.bottom) {
                     hit = true;
                     if (z.shape === 'contact') {
                         isContactHovered = true;
+                    } else if (z.shape === 'snap') {
+                        isShotHovered = true;
                     } else {
                         hoveredShape = z.shape;
                         transitionTo(z.shape);
@@ -740,6 +831,37 @@
             material.uniforms.uWaveStrength.value = motionShape === 'grid' ? 1 : 0;
             material.uniforms.uHomeMotionStrength.value = motionShape === 'home' ? 1 : 0;
             contactEmailEl.style.opacity = isContactHovered ? '1' : '0';
+            const isCenteredHoverView = isContactHovered || isShotHovered;
+            if (!isShotHovered) shotSequenceStart = null;
+
+            const cameraSettled = Math.abs(camera.fov - 60) < 1.2 && Math.abs(camera.position.z - 17.2) < 0.18;
+            if (isShotHovered && cameraSettled) {
+                if (shotSequenceStart === null) shotSequenceStart = elapsed;
+            }
+
+            const shotElapsed = shotSequenceStart === null ? 0 : Math.max(0, elapsed - shotSequenceStart);
+            const shotActive = isShotHovered && shotSequenceStart !== null;
+            const flashStrength = shotActive ? Math.max(0, 1.0 - Math.abs(shotElapsed - 0.1) / 0.18) : 0;
+            const slotOpen = shotActive ? THREE.MathUtils.clamp((shotElapsed - 0.08) / 0.18, 0, 1) : 0;
+            const printProgress = shotActive ? THREE.MathUtils.clamp((shotElapsed - 0.16) / 0.7, 0, 1) : 0;
+            const slotLift = slotOpen * 3.5;
+            const printHeight = shotPrintEl.offsetHeight || 278;
+            const slotHeight = 8;
+            const printSlotOverlap = 14;
+            const initialPrintOffset = -printHeight - printSlotOverlap + slotHeight * 0.4;
+            const retainedInSlot = 30;
+            const ejectedOffset = printProgress * (printHeight - retainedInSlot);
+            const visiblePrintHeight = Math.max(slotHeight * 0.8, printProgress * (printHeight - retainedInSlot + slotHeight));
+            const clipTop = Math.max(0, printHeight - visiblePrintHeight);
+
+            shotFlashEl.style.opacity = (flashStrength * 0.32).toFixed(3);
+            shotSlotEl.style.opacity = (slotOpen * 0.95).toFixed(3);
+            shotSlotEl.style.transform = `translate(-50%, calc(-50% - ${slotLift}px)) scaleY(${0.12 + slotOpen * 0.88})`;
+            shotSlotLipEl.style.opacity = (slotOpen * 0.98).toFixed(3);
+            shotSlotLipEl.style.transform = `translate(-50%, calc(-50% - ${slotLift + 3}px)) scaleY(${0.12 + slotOpen * 0.88})`;
+            shotPrintEl.style.opacity = shotActive ? '0.98' : '0';
+            shotPrintEl.style.transform = `translate(-50%, calc(${initialPrintOffset + ejectedOffset}px))`;
+            shotPrintEl.style.clipPath = shotActive ? `inset(${clipTop}px 0 0 0)` : 'inset(100% 0 0 0)';
 
             // 旋转速度与正面修正逻辑
             const currentSpeed = (motionShape === 'en') ? earthRotationSpeed : baseRotationSpeed;
@@ -761,7 +883,7 @@
                 updateLinkedInTargets(elapsed);
                 updateLinkedInNetwork(elapsed);
             } else if (linkedinNetworkVisibility > 0.001) {
-                linkedinLineMaterial.opacity = linkedinNetworkVisibility * 0.7;
+                linkedinLineMaterial.opacity = linkedinNetworkVisibility * 0.7 * sceneVisibility;
             } else {
                 linkedinLineMaterial.opacity = 0;
                 linkedinLineGeometry.setDrawRange(0, 0);
@@ -779,26 +901,29 @@
                 : 0;
             contactCursor.material.opacity = THREE.MathUtils.lerp(
                 contactCursor.material.opacity,
-                contactCursorTargetOpacity,
+                contactCursorTargetOpacity * sceneVisibility,
                 hoveredShape === 'contact' ? 0.16 : 0.12
             );
             contactCursor.visible = contactCursor.material.opacity > 0.01;
 
-            const targetCameraFov = isContactHovered ? 60 : 75;
-            const targetCameraZ = isContactHovered ? 17.2 : 16;
-            camera.fov = THREE.MathUtils.lerp(camera.fov, targetCameraFov, isContactHovered ? 0.06 : 0.08);
-            camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetCameraZ, isContactHovered ? 0.06 : 0.08);
+            const targetCameraFov = isCenteredHoverView ? 60 : 75;
+            const targetCameraZ = isCenteredHoverView ? 17.2 : 16;
+            camera.fov = THREE.MathUtils.lerp(camera.fov, targetCameraFov, isCenteredHoverView ? 0.06 : 0.08);
+            camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetCameraZ, isCenteredHoverView ? 0.06 : 0.08);
             camera.updateProjectionMatrix();
 
+            const targetRotX = hoveredShape === 'linkedin'
+                ? Math.PI / 2
+                : 0;
             particleRig.rotation.x = THREE.MathUtils.lerp(
                 particleRig.rotation.x,
-                hoveredShape === 'linkedin' ? Math.PI / 2 : 0,
+                targetRotX,
                 hoveredShape === 'linkedin' ? 0.12 : 0.045
             );
             particleRig.position.y = THREE.MathUtils.lerp(
                 particleRig.position.y,
-                isContactHovered ? -4.4 : 0,
-                isContactHovered ? 0.08 : 0.065
+                isCenteredHoverView ? -4.4 : 0,
+                isCenteredHoverView ? 0.08 : 0.065
             );
             particleRig.rotation.y = lerpAngle(
                 particleRig.rotation.y,
@@ -813,6 +938,7 @@
                 const rect = a.getBoundingClientRect();
                 let shape = 'grid';
                 if(a.parentElement.classList.contains('nav-home')) shape = 'home';
+                if(a.parentElement.classList.contains('nav-snap')) shape = 'snap';
                 if(a.parentElement.classList.contains('nav-contact')) shape = 'contact';
                 if(a.parentElement.classList.contains('nav-linkedin')) shape = 'linkedin';
                 if(a.parentElement.classList.contains('nav-en')) shape = 'en';

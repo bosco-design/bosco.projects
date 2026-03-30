@@ -27,6 +27,113 @@ html, body, a, button { cursor: auto !important; }
 /* 全屏WebGL背景 */
 #webgl-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
 
+:root {
+    --shot-slot-width: min(22vw, 268px);
+    --shot-print-width: calc(var(--shot-slot-width) * 0.95);
+}
+
+.shot-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 18;
+    pointer-events: none;
+    opacity: 0;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(255, 252, 244, 0.88) 0%, rgba(255, 252, 244, 0.45) 26%, rgba(255, 252, 244, 0.14) 55%, rgba(255, 252, 244, 0) 82%);
+    transition: opacity 0.16s ease-out;
+}
+
+.shot-slot {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    width: var(--shot-slot-width);
+    height: 7px;
+    transform: translate(-50%, -50%) scaleX(0.82) scaleY(0);
+    transform-origin: center center;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0;
+    border-radius: 1px;
+    background: linear-gradient(180deg, rgba(32, 32, 32, 0.95) 0%, rgba(18, 18, 18, 0.98) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.36);
+}
+
+.shot-slot::before,
+.shot-slot::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+}
+
+.shot-slot::before {
+    left: -10px;
+    right: -10px;
+    top: -7px;
+    bottom: -7px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.018) 0%, rgba(0, 0, 0, 0.038) 52%, rgba(255, 255, 255, 0.035) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    z-index: -1;
+}
+
+.shot-slot::after {
+    left: 1px;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
+    border-radius: 1px;
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0.96) 0%, rgba(22, 22, 22, 0.94) 100%);
+    pointer-events: none;
+}
+
+.shot-slot-lip {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    width: var(--shot-slot-width);
+    height: 4px;
+    transform: translate(-50%, calc(-50% - 3px)) scaleY(0);
+    transform-origin: center top;
+    z-index: 22;
+    pointer-events: none;
+    opacity: 0;
+    border-radius: 1px 1px 0 0;
+    background: linear-gradient(180deg, rgba(36, 36, 36, 0.98) 0%, rgba(18, 18, 18, 0.96) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 1px 0 rgba(0, 0, 0, 0.18);
+}
+
+.shot-print {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    width: var(--shot-print-width);
+    aspect-ratio: 88 / 107;
+    transform: translate(-50%, -50%);
+    z-index: 21;
+    pointer-events: none;
+    opacity: 0;
+    border-radius: 4px;
+    background: #fbfbf7;
+    box-shadow:
+        0 16px 36px rgba(0, 0, 0, 0.10),
+        inset 0 0 0 1px rgba(17, 17, 17, 0.06);
+}
+
+.shot-print::before {
+    content: "";
+    position: absolute;
+    inset: 5.15% 6.25% 21.03% 6.25%;
+    border-radius: 2px;
+    background: linear-gradient(180deg, rgba(244, 244, 239, 0.98) 0%, rgba(236, 236, 231, 0.94) 100%);
+}
+
 .contact-email {
     position: fixed;
     top: 30%;
@@ -61,9 +168,9 @@ html, body, a, button { cursor: auto !important; }
 }
 
 .contact-hint {
-    margin-top: 14px;
+    margin-top: 8px;
     font-size: 13px;
-    font-weight: 400;
+    font-weight: 500;
     letter-spacing: 0.04em;
     line-height: 1.5;
     opacity: 0.7;
@@ -98,6 +205,10 @@ html, body, a, button { cursor: auto !important; }
 .navbar li.nav-spacing { flex: 2.5; }
 .navbar li.nav-linkedin { flex: 0.5; }
 .navbar li.nav-en { flex: 0.5; }
+.navbar li.nav-contact a,
+.navbar li.nav-contact a *,
+.navbar li.nav-linkedin a,
+.navbar li.nav-linkedin a * ,
 .navbar li.nav-en a,
 .navbar li.nav-en a * { cursor: pointer !important; }
 

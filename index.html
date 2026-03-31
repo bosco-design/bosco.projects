@@ -10,6 +10,16 @@
 </head>
 
 <body>
+    <div class="maintenance-screen" id="maintenance-screen" aria-hidden="true">
+        <div class="maintenance-shell">
+            <div class="maintenance-mark">BOSCO ZHANG</div>
+            <h1 class="maintenance-title">Site Under Maintenance</h1>
+            <p class="maintenance-copy">A quieter, sharper version is on the way.</p>
+            <a class="maintenance-link" href="mailto:yuchuan.event@gmail.com">yuchuan.event@gmail.com</a>
+        </div>
+    </div>
+
+    <div class="site-app" id="site-app">
     <canvas id="webgl-canvas"></canvas>
     <div class="shot-flash" id="shot-flash" aria-hidden="true"></div>
     <div class="shot-slot" id="shot-slot" aria-hidden="true"></div>
@@ -53,6 +63,7 @@
     </nav>
 
     <div class="cursor" id="cursor" aria-hidden="true"></div>
+    </div>
 
     <script type="importmap">
       { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
@@ -60,6 +71,15 @@
 
     <script type="module">
         import * as THREE from 'three';
+        const MAINTENANCE_MODE = true;
+        const maintenanceScreenEl = document.getElementById('maintenance-screen');
+        const siteAppEl = document.getElementById('site-app');
+
+        if (MAINTENANCE_MODE) {
+            document.body.dataset.mode = 'maintenance';
+            maintenanceScreenEl.setAttribute('aria-hidden', 'false');
+            siteAppEl.setAttribute('hidden', '');
+        } else {
 
         // 场景与相机基础配置
         const canvas = document.querySelector('#webgl-canvas');
@@ -120,6 +140,28 @@
         let shotSequenceStart = null;
 
         let earthMapImage = null;
+
+        const getViewportTier = () => {
+            if (window.innerWidth <= 767) return 'mobile';
+            if (window.innerWidth <= 1024) return 'tablet';
+            return 'desktop';
+        };
+
+        const getInputTier = () => {
+            return window.matchMedia('(hover: none) and (pointer: coarse)').matches ? 'touch' : 'fine';
+        };
+
+        const getOrientationTier = () => {
+            return window.innerHeight >= window.innerWidth ? 'portrait' : 'landscape';
+        };
+
+        const updateAdaptiveContext = () => {
+            document.body.dataset.viewport = getViewportTier();
+            document.body.dataset.input = getInputTier();
+            document.body.dataset.orientation = getOrientationTier();
+        };
+
+        updateAdaptiveContext();
         const getEarthRadius = () => {
             const viewportHeight = window.innerHeight;
             return THREE.MathUtils.clamp(viewportHeight * 0.0088, 4.6, 7.4);
@@ -751,6 +793,7 @@
             markInteraction();
         });
         window.addEventListener('resize', () => {
+            updateAdaptiveContext();
             updateZones();
             renderer.setSize(window.innerWidth, window.innerHeight);
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -947,6 +990,7 @@
         };
 
         updateZones(); tick();
+        }
     </script>
 </body>
 </html>

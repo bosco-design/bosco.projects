@@ -7,6 +7,72 @@ body { background-color: #f5f5f5; font-family: -apple-system, system-ui, sans-se
 /* 恢复原生指针显示 */
 html, body, a, button { cursor: auto !important; }
 
+.site-app[hidden] { display: none !important; }
+
+.maintenance-screen {
+    position: fixed;
+    inset: 0;
+    display: none;
+    place-items: center;
+    padding: 32px;
+    background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.92) 0%, rgba(245, 245, 245, 0.96) 38%, #f5f5f5 100%);
+    z-index: 2000;
+}
+
+body[data-mode="maintenance"] .maintenance-screen {
+    display: grid;
+}
+
+.maintenance-shell {
+    width: min(560px, 100%);
+    text-align: center;
+}
+
+.maintenance-mark {
+    margin-bottom: 18px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+}
+
+.maintenance-title {
+    font-size: clamp(34px, 6vw, 64px);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+}
+
+.maintenance-copy {
+    margin-top: 18px;
+    font-size: 16px;
+    line-height: 1.6;
+    opacity: 0.72;
+}
+
+.maintenance-link {
+    display: inline-block;
+    margin-top: 26px;
+    color: #111111;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid rgba(17, 17, 17, 0.2);
+    padding-bottom: 4px;
+}
+
+/*
+  Responsive Foundation
+  Desktop-first breakpoints:
+  - desktop: 1025px+
+  - tablet: 768px - 1024px
+  - mobile: 0 - 767px
+  Interaction capability:
+  - hover / fine pointer: desktop-like
+  - no-hover / coarse pointer: touch-like
+*/
+
 /* 丝滑延迟跟随光标：初始设为可见，由JS控制淡出 */
 .cursor {
     position: fixed;
@@ -227,4 +293,32 @@ html, body, a, button { cursor: auto !important; }
 .nav-inner.is-active {
     transform: translateY(-5px);
     filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Tablet scaffold */
+@media (max-width: 1024px) {
+    body[data-viewport="tablet"] {
+        /* Tablet-specific layout overrides live here */
+    }
+}
+
+/* Mobile scaffold */
+@media (max-width: 767px) {
+    body[data-viewport="mobile"] {
+        /* Mobile-specific layout overrides live here */
+    }
+}
+
+/* Touch-first interaction scaffold */
+@media (hover: none) and (pointer: coarse) {
+    body[data-input="touch"] {
+        /* Touch-specific interaction overrides live here */
+    }
+}
+
+/* Fine-pointer interaction scaffold */
+@media (hover: hover) and (pointer: fine) {
+    body[data-input="fine"] {
+        /* Desktop hover-specific overrides live here */
+    }
 }

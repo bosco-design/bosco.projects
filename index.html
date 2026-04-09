@@ -94,7 +94,7 @@
 
     <script type="module">
         import * as THREE from 'three';
-        const MAINTENANCE_MODE = false;
+        const MAINTENANCE_MODE = true;
         const maintenanceScreenEl = document.getElementById('maintenance-screen');
         const siteAppEl = document.getElementById('site-app');
 
@@ -157,6 +157,7 @@
         const linkedinDustMotion = new Float32Array(PARTICLE_COUNT * 4);
         const linkedinDustMode = new Float32Array(PARTICLE_COUNT);
         let totalRotation = 0;
+        let previousMotionShape = 'grid';
         let currentShape = 'grid';
         let hoveredShape = 'grid';
         let hitZones = [];
@@ -169,14 +170,13 @@
         let sceneVisibility = 1;
         let lastInteractionAt = performance.now();
         const inactivitySleepMs = 120000;
-        let previousProgressValue = 0;
-        let shapeTransitionBlur = 0;
         let shotSequenceStart = null;
         let shotFlashStart = null;
         let wasShotHovered = false;
         let bgLightPos = { x: 35, y: 12 };
         let geometry = null;
         const aboutCharTemplateCache = new Map();
+        const aboutPointColors = new Float32Array(PARTICLE_COUNT * 3);
 
         let earthMapImage = null;
         let aboutPortraitImage = null;
@@ -478,73 +478,9 @@
         };
 
         const buildAboutAsciiPlaceholder = () => {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            const navHeight = 84;
-            const usableHeight = Math.max(height - navHeight, 320);
-            const columns = Math.max(78, Math.floor(width / 9.8));
-            const rows = Math.max(28, Math.floor(usableHeight / 13.5));
-            let lines = buildAboutAsciiLines(columns, rows);
-            if (!lines || !lines.some(line => /[^ ]/.test(line))) {
-                lines = buildAboutFallbackLines(columns, rows, "  ..::--==++**##%@");
-            }
-
-            const text = lines.join('\n');
-            aboutAsciiEl.textContent = text;
-            const data = new Float32Array(PARTICLE_COUNT * 3);
-            const visibleSpan = getVisibleSpanAtDepth(20);
-            const worldWidth = visibleSpan.width * 0.98;
-            const worldHeight = visibleSpan.height * (usableHeight / height) * 1.04;
-            const screenCenterBelowNav = navHeight + usableHeight * 0.5;
-            const yOffset = -((screenCenterBelowNav - height * 0.5) / height) * visibleSpan.height;
-            const cellWorldWidth = worldWidth / columns;
-            const cellWorldHeight = worldHeight / rows;
-            const placements = [];
-
-            for (let row = 0; row < rows; row++) {
-                const line = lines[row] || '';
-                for (let col = 0; col < columns; col++) {
-                    const char = line[col] || ' ';
-                    if (char === ' ') continue;
-                    placements.push({ row, col, char });
-                }
-            }
-
-            if (!placements.length) {
-                precomputedShapes.about = new Float32Array(precomputedShapes.grid);
-                return;
-            }
-
-            const totalTemplatePoints = placements.reduce((sum, item) => sum + getAboutCharTemplate(item.char).length, 0);
-            const densityScale = Math.max(1, totalTemplatePoints / PARTICLE_COUNT);
-            let writeIndex = 0;
-
-            for (const item of placements) {
-                const template = getAboutCharTemplate(item.char);
-                const centerX = -worldWidth * 0.5 + cellWorldWidth * (item.col + 0.5);
-                const centerY = yOffset + worldHeight * 0.5 - cellWorldHeight * (item.row + 0.5);
-                const step = Math.max(1, Math.floor(densityScale * 0.28));
-
-                for (let i = 0; i < template.length && writeIndex < PARTICLE_COUNT; i += step) {
-                    const sample = template[i];
-                    data[writeIndex * 3] = centerX + sample.x * cellWorldWidth * 1.78;
-                    data[writeIndex * 3 + 1] = centerY - sample.y * cellWorldHeight * 1.42;
-                    data[writeIndex * 3 + 2] = 0;
-                    writeIndex++;
-                }
-            }
-
-            let repeatIndex = 0;
-            while (writeIndex < PARTICLE_COUNT) {
-                const source = repeatIndex % Math.max(writeIndex, 1);
-                data[writeIndex * 3] = data[source * 3];
-                data[writeIndex * 3 + 1] = data[source * 3 + 1];
-                data[writeIndex * 3 + 2] = 0;
-                writeIndex++;
-                repeatIndex++;
-            }
-
-            precomputedShapes.about = data;
+            aboutAsciiEl.textContent = '';
+            precomputedShapes.about = new Float32Array(precomputedShapes.grid);
+            aboutPointColors.set(basePointColors);
         };
 
         const refreshAboutShape = () => {
@@ -556,13 +492,6 @@
                 currentShape = 'about';
             }
         };
-
-        aboutPortraitImage = new Image();
-        aboutPortraitImage.onload = () => refreshAboutShape();
-        aboutPortraitImage.onerror = () => { aboutPortraitImage = null; refreshAboutShape(); };
-        aboutPortraitImage.src = 'assets/images/about-portrait.jpg';
-
-        buildAboutAsciiPlaceholder();
 
         const isPointInPolygon = (x, y, polygon) => {
             let inside = false;
@@ -779,6 +708,9 @@
             basePointColors[idx] = baseColor.r;
             basePointColors[idx + 1] = baseColor.g;
             basePointColors[idx + 2] = baseColor.b;
+            aboutPointColors[idx] = baseColor.r;
+            aboutPointColors[idx + 1] = baseColor.g;
+            aboutPointColors[idx + 2] = baseColor.b;
             pointScale[i] = 0.56 + Math.random() * 0.18;
             pointHomeMotion[motionIdx] = Math.random() * Math.PI * 2;
             pointHomeMotion[motionIdx + 1] = Math.random() * Math.PI * 2;
@@ -789,6 +721,7 @@
             pointColorMotion[colorMotionIdx + 2] = 0.2 + Math.random() * 0.24;
             pointColorMotion[colorMotionIdx + 3] = 0.15 + Math.random() * 0.85;
         }
+        buildAboutAsciiPlaceholder();
 
         const material = new THREE.ShaderMaterial({
             transparent: true, depthWrite: false, blending: THREE.NormalBlending,
@@ -801,13 +734,11 @@
                 uHomeMotionStrength: { value: 0 },
                 uCenteredViewMix: { value: 0 },
                 uColorBreathStrength: { value: 1 },
-                uSceneOpacity: { value: 1 },
-                uMotionBlurStrength: { value: 0 }
+                uSceneOpacity: { value: 1 }
             },
             vertexShader: `
-                uniform float uTime; uniform float uProgress; uniform float uLinkedinMix; uniform float uAboutMix; uniform float uWaveStrength; uniform float uHomeMotionStrength; uniform float uCenteredViewMix; uniform float uColorBreathStrength; uniform float uSceneOpacity; uniform float uMotionBlurStrength; attribute vec3 aTarget; attribute vec3 color; attribute vec4 aMotion; attribute vec4 aHomeMotion; attribute vec4 aColorMotion; attribute float aNetworkNode; attribute float aPointScale; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix; varying float vOverlaySuppress; varying float vAboutFade; varying vec2 vBlurDir;
+                uniform float uTime; uniform float uProgress; uniform float uLinkedinMix; uniform float uAboutMix; uniform float uWaveStrength; uniform float uHomeMotionStrength; uniform float uCenteredViewMix; uniform float uColorBreathStrength; uniform float uSceneOpacity; attribute vec3 aTarget; attribute vec3 color; attribute vec4 aMotion; attribute vec4 aHomeMotion; attribute vec4 aColorMotion; attribute float aNetworkNode; attribute float aPointScale; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix; varying float vOverlaySuppress; varying float vAboutFade;
                 void main() {
-                    vec3 transitionDelta = aTarget - position;
                     vec3 finalPos = mix(position, aTarget, uProgress);
                     vec3 homeDrift = vec3(
                         sin(uTime * aHomeMotion.z + aHomeMotion.x) * aHomeMotion.w,
@@ -837,16 +768,9 @@
                     float linkedinPointSize = mix(defaultPointSize, (7.0 + uProgress * 12.0) * linkedinScale, linkedinNodeMix);
                     float centeredPointSize = defaultPointSize * 0.86;
                     float basePointSize = mix(defaultPointSize, centeredPointSize, uCenteredViewMix * (1.0 - uLinkedinMix));
-                    float pointSize = mix(linkedinPointSize, basePointSize * 0.6, hiddenMix);
-                    gl_PointSize = pointSize * mix(1.0, 1.72, uMotionBlurStrength * (1.0 - linkedinNodeMix));
+                    gl_PointSize = mix(linkedinPointSize, basePointSize * 0.6, hiddenMix);
                     gl_Position = projectionMatrix * mvPos;
                     vec2 ndc = gl_Position.xy / max(gl_Position.w, 0.0001);
-                    vec4 blurMv = modelViewMatrix * vec4(finalPos + transitionDelta * 0.08, 1.0);
-                    vec4 blurClip = projectionMatrix * blurMv;
-                    vec2 blurNdc = blurClip.xy / max(blurClip.w, 0.0001);
-                    vec2 blurVec = blurNdc - ndc;
-                    float blurLen = max(length(blurVec), 0.00001);
-                    vBlurDir = blurVec / blurLen;
                     float edgeX = smoothstep(1.02, 0.72, abs(ndc.x));
                     float topFade = smoothstep(1.0, 0.34, ndc.y);
                     float bottomFade = smoothstep(1.05, 0.78, -ndc.y);
@@ -870,18 +794,12 @@
                 varying float vHiddenMix;
                 varying float vOverlaySuppress;
                 varying float vAboutFade;
-                varying vec2 vBlurDir;
-                uniform float uMotionBlurStrength;
                 void main() {
                     vec2 centered = gl_PointCoord - vec2(0.5);
                     float dist = length(centered);
                     float defaultAlpha = smoothstep(0.5, 0.06, dist);
                     float softAlpha = step(dist, 0.5);
                     float alpha = mix(defaultAlpha, softAlpha, vLinkedinNodeMix);
-                    float axial = abs(dot(centered, vBlurDir));
-                    float radial = abs(dot(centered, vec2(-vBlurDir.y, vBlurDir.x)));
-                    float blurAlpha = smoothstep(0.68, 0.0, axial) * smoothstep(0.32, 0.0, radial);
-                    alpha = mix(alpha, max(alpha, blurAlpha * 0.62), uMotionBlurStrength * (1.0 - vLinkedinNodeMix));
                     float sparkle = pow(max(0.0, 1.0 - dist * 2.0), 2.8);
                     vec3 litColor = mix(vColor, vec3(1.0), sparkle * 0.48 * (1.0 - vLinkedinNodeMix * 0.4));
                     if (dist > 0.5) discard;
@@ -1010,7 +928,6 @@
             geometry.attributes.aTarget.array.set(precomputedShapes[name]);
             geometry.attributes.aTarget.needsUpdate = true;
             currentShape = name;
-            shapeTransitionBlur = 1;
         };
 
         const updateLinkedInTargets = elapsed => {
@@ -1290,8 +1207,6 @@
                         isContactHovered = true;
                     } else if (z.shape === 'about') {
                         isAboutHovered = true;
-                        hoveredShape = z.shape;
-                        transitionTo(z.shape);
                     } else if (z.shape === 'snap') {
                         isShotHovered = true;
                     } else if (z.shape === 'works' || z.shape === 'gallery') {
@@ -1315,15 +1230,6 @@
             const targetProg = (hoveredShape === 'grid') ? 0 : 1;
             const progressSpeed = (targetProg === 1) ? hoverInProgressSpeed : hoverOutProgressSpeed;
             material.uniforms.uProgress.value += (targetProg - material.uniforms.uProgress.value) * progressSpeed;
-            const progressVelocity = Math.abs(material.uniforms.uProgress.value - previousProgressValue);
-            previousProgressValue = material.uniforms.uProgress.value;
-            shapeTransitionBlur = THREE.MathUtils.lerp(shapeTransitionBlur, 0, 0.12);
-            const motionBlurTarget = THREE.MathUtils.clamp(progressVelocity * 18 + shapeTransitionBlur * 0.85, 0, 1);
-            material.uniforms.uMotionBlurStrength.value = THREE.MathUtils.lerp(
-                material.uniforms.uMotionBlurStrength.value,
-                motionBlurTarget,
-                motionBlurTarget > material.uniforms.uMotionBlurStrength.value ? 0.22 : 0.14
-            );
             const linkedinTargetVisibility = (hoveredShape === 'linkedin') ? 1 : 0;
             linkedinNetworkVisibility += (linkedinTargetVisibility - linkedinNetworkVisibility) * 0.09;
             material.uniforms.uLinkedinMix.value = linkedinNetworkVisibility;
@@ -1333,6 +1239,16 @@
                 motionShape === 'about' ? 1 : 0,
                 motionShape === 'about' ? 0.1 : 0.08
             );
+            if (motionShape !== 'linkedin') {
+                const aboutColorMix = material.uniforms.uAboutMix.value;
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    const idx = i * 3;
+                    pointColors[idx] = THREE.MathUtils.lerp(basePointColors[idx], aboutPointColors[idx], aboutColorMix);
+                    pointColors[idx + 1] = THREE.MathUtils.lerp(basePointColors[idx + 1], aboutPointColors[idx + 1], aboutColorMix);
+                    pointColors[idx + 2] = THREE.MathUtils.lerp(basePointColors[idx + 2], aboutPointColors[idx + 2], aboutColorMix);
+                }
+                geometry.attributes.color.needsUpdate = true;
+            }
             material.uniforms.uWaveStrength.value = motionShape === 'grid' ? 1 : 0;
             material.uniforms.uHomeMotionStrength.value = motionShape === 'home' ? 1 : 0;
             contactEmailEl.style.opacity = (isContactHovered && !isComingSoonHovered) ? '1' : '0';
@@ -1409,16 +1325,19 @@
 
             // 旋转速度与正面修正逻辑
             const currentSpeed = (motionShape === 'en') ? earthRotationSpeed : baseRotationSpeed;
-            if (motionShape !== 'linkedin' && motionShape !== 'about') {
+            const isLeavingHome = previousMotionShape === 'home' && motionShape === 'grid';
+
+            if (motionShape !== 'linkedin' && motionShape !== 'about' && motionShape !== 'home') {
                 totalRotation = normalizeAngle(totalRotation + delta * currentSpeed);
+            } else if (motionShape === 'home') {
+                totalRotation = normalizeAngle(particleRig.rotation.y);
             }
             
             let targetRot;
             if (motionShape === 'linkedin' || motionShape === 'contact' || motionShape === 'about') {
                 targetRot = 0;
             } else if (motionShape === 'home') {
-                const fullCircle = Math.PI * 2;
-                targetRot = normalizeAngle(Math.round(totalRotation / fullCircle) * fullCircle);
+                targetRot = 0;
             } else {
                 targetRot = normalizeAngle(totalRotation);
             }
@@ -1482,8 +1401,9 @@
             particleRig.rotation.y = lerpAngle(
                 particleRig.rotation.y,
                 targetRot,
-                motionShape === 'grid' ? 0.05 : 0.1
+                motionShape === 'grid' ? (isLeavingHome ? 0.18 : 0.05) : 0.1
             );
+            previousMotionShape = motionShape;
             renderer.render(scene, camera);
         };
 
@@ -1491,7 +1411,7 @@
             hitZones = Array.from(navLinks).map(a => {
                 const rect = a.getBoundingClientRect();
                 let shape = 'grid';
-                if(a.parentElement.classList.contains('nav-about')) shape = 'about';
+                if(a.parentElement.classList.contains('nav-about')) shape = 'grid';
                 if(a.parentElement.classList.contains('nav-home')) shape = 'home';
                 if(a.parentElement.classList.contains('nav-snap')) shape = 'snap';
                 if(a.parentElement.classList.contains('nav-contact')) shape = 'contact';

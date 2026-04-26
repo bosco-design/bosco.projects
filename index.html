@@ -9,7 +9,17 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
-<body>
+<body data-loading="true">
+    <div class="loading-screen" id="loading-screen" role="status" aria-live="polite" aria-label="Loading site">
+        <div class="loading-logo-wrap" aria-hidden="true">
+            <svg class="loading-logo" viewBox="0 0 790 790" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle class="loading-logo__track" cx="395" cy="395" r="385"/>
+                <circle class="loading-logo__circle" cx="395" cy="395" r="385" pathLength="1"/>
+                <path class="loading-logo__glyph" pathLength="1" d="M545 128C600.228 128 645 172.772 645 228V253C645 295.964 617.905 332.597 579.87 346.75C617.461 360.738 644.366 396.685 644.988 439H645V503C645 572.036 589.036 628 520 628H145L182.5 478H438C451.807 478 463 466.807 463 453C463 439.193 451.807 428 438 428H195L220 328H475.5C489.307 328 500.5 316.807 500.5 303C500.5 289.193 489.307 278 475.5 278H232.5L270 128H545Z"/>
+            </svg>
+        </div>
+    </div>
+
     <div class="maintenance-screen" id="maintenance-screen" aria-hidden="true">
         <div class="maintenance-shell">
             <div class="maintenance-mark">BOSCO ZHANG</div>
@@ -22,8 +32,15 @@
     <div class="site-app" id="site-app">
     <canvas id="webgl-canvas"></canvas>
     <div class="shot-flash" id="shot-flash" aria-hidden="true"></div>
+    <div class="nav-flare" aria-hidden="true">
+        <span class="nav-flare__ring"></span>
+        <span class="nav-flare__ghost nav-flare__ghost--a"></span>
+        <span class="nav-flare__ghost nav-flare__ghost--b"></span>
+        <span class="nav-flare__ghost nav-flare__ghost--c"></span>
+        <span class="nav-flare__ghost nav-flare__ghost--d"></span>
+        <span class="nav-flare__spark"></span>
+    </div>
     <div class="shot-slot" id="shot-slot" aria-hidden="true"></div>
-    <div class="shot-slot-lip" id="shot-slot-lip" aria-hidden="true"></div>
     <div class="shot-print" id="shot-print" aria-hidden="true">
         <div class="shot-print-mark" aria-hidden="true">
             <svg viewBox="0 0 790 790" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -33,14 +50,24 @@
         </div>
     </div>
     <div class="coming-soon" id="coming-soon" aria-hidden="true">COMING SOON</div>
-    <pre class="about-ascii" id="about-ascii" aria-hidden="true"></pre>
     <div class="contact-email" id="contact-email" aria-hidden="true">
         yuchuan.event@gmail.com<span class="contact-cursor" id="contact-cursor"></span>
         <div class="contact-hint">or click CONTACT to write.</div>
     </div>
 
-    <nav class="navbar">
-        <ul>
+    <nav class="navbar" aria-label="Primary navigation">
+        <a class="nav-mobile-home" href="#home" aria-label="Home">
+            <svg class="nav-icon" viewBox="0 0 790 790" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="395" cy="395" r="385" stroke="currentColor" stroke-width="20"/>
+                <path d="M545 128C600.228 128 645 172.772 645 228V253C645 295.964 617.905 332.597 579.87 346.75C617.461 360.738 644.366 396.685 644.988 439H645V503C645 572.036 589.036 628 520 628H145L182.5 478H438C451.807 478 463 466.807 463 453C463 439.193 451.807 428 438 428H195L220 328H475.5C489.307 328 500.5 316.807 500.5 303C500.5 289.193 489.307 278 475.5 278H232.5L270 128H545Z" fill="currentColor"/>
+            </svg>
+        </a>
+        <button class="nav-menu-toggle" type="button" aria-controls="site-nav-list" aria-expanded="false" aria-label="Open navigation">
+            <span class="nav-menu-toggle__line"></span>
+            <span class="nav-menu-toggle__line"></span>
+            <span class="nav-menu-toggle__line"></span>
+        </button>
+        <ul id="site-nav-list">
             <li class="nav-about"><a href="#about"><span class="nav-inner">ABOUT</span></a></li>
             <li class="nav-works"><a href="#works"><span class="nav-inner">WORKS</span></a></li>
             <li class="nav-gallery"><a href="#gallery"><span class="nav-inner">GALLERY</span></a></li>
@@ -61,68 +88,244 @@
             <li class="nav-linkedin">
                 <a href="https://www.linkedin.com/in/bosco-zhang" target="_blank" rel="noopener noreferrer">
                     <span class="nav-inner">
-                        <svg class="nav-linkedin" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <svg class="nav-linkedin-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                             <path fill="currentColor" d="M21,21H17V14.25C17,13.19 15.81,12.31 14.75,12.31C13.69,12.31 13,13.19 13,14.25V21H9V9H13V11C13.66,9.93 15.36,9.24 16.5,9.24C19,9.24 21,11.28 21,13.75V21M7,21H3V9H7V21M5,3A2,2 0 0,1 7,5A2,2 0 0,1 5,7A2,2 0 0,1 3,5A2,2 0 0,1 5,3Z"/>
                         </svg>
                     </span>
                 </a>
             </li>
-            <li class="nav-en"><a aria-disabled="true" tabindex="-1"><span class="nav-inner">EN</span></a></li>
+            <li class="nav-en">
+                <a href="#lang" aria-haspopup="true" aria-expanded="false"><span class="nav-inner">EN</span></a>
+                <div class="nav-lang-dropdown" aria-label="Language options">
+                    <button type="button" class="nav-lang-option" data-shape="zhHans" aria-label="简体中文">简</button>
+                    <button type="button" class="nav-lang-option" data-shape="zhHant" aria-label="繁體中文">繁</button>
+                </div>
+            </li>
         </ul>
     </nav>
 
     <div class="cursor" id="cursor" aria-hidden="true"></div>
 
     <main class="page-stack" id="page-stack">
-        <section class="page-screen hero-screen" aria-label="Home"></section>
+        <section class="page-screen hero-screen" id="home" aria-label="Home"></section>
         <section class="page-screen about-screen" id="about" aria-label="About">
-            <div class="about-shell">
-                <p class="about-kicker">ABOUT ME</p>
-                <h2 class="about-title">A quieter page for the person behind the work.</h2>
-                <p class="about-copy">
-                    I am Bosco Zhang, a multidisciplinary designer shaping digital experiences,
-                    visual systems, and spatial ideas with a focus on clarity, restraint, and feeling.
-                </p>
+            <div class="about-shell about-reveal" id="about-reveal">
+                <div class="about-grid-main">
+                    <h2 class="about-intro about-fragment" style="--fragment-delay: 0.1s;">
+                        HI, I'M BOSCO ZHANG.
+                    </h2>
+                    <p class="about-role about-fragment" style="--fragment-delay: 0.34s;">
+                        Event Management Graduate Student at NYU
+                    </p>
+                    <p class="about-disciplines about-disciplines-first about-fragment" style="--fragment-delay: 0.58s;">
+                        Event Planning
+                    </p>
+                    <p class="about-disciplines about-fragment" style="--fragment-delay: 0.82s;">
+                        Visual Design
+                    </p>
+                    <p class="about-disciplines about-fragment" style="--fragment-delay: 1.06s;">
+                        Photography
+                    </p>
+                </div>
             </div>
         </section>
     </main>
     </div>
 
     <script type="importmap">
-      { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+      { "imports": { "three": "./assets/vendor/three.module.js" } }
     </script>
 
     <script type="module">
-        import * as THREE from 'three';
-        const MAINTENANCE_MODE = true;
+        const MAINTENANCE_MODE = false;
+        const loadingScreenEl = document.getElementById('loading-screen');
+        let loadingProgressTarget = 0.04;
+        let loadingProgressDisplay = 0.04;
+        let loadingProgressAnimationId = null;
+        let loadingProgressLastTime = performance.now();
         const maintenanceScreenEl = document.getElementById('maintenance-screen');
         const siteAppEl = document.getElementById('site-app');
+
+        const renderLoadingProgress = value => {
+            document.documentElement.style.setProperty('--loading-progress', value.toFixed(4));
+            document.documentElement.style.setProperty('--loading-offset', (1 - value).toFixed(4));
+        };
+
+        const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+        const runLoadingProgress = now => {
+            const delta = Math.min((now - loadingProgressLastTime) / 1000, 0.08);
+            const maxSpeed = loadingProgressTarget >= 1 ? 0.78 : 0.4;
+            const maxStep = maxSpeed * delta;
+            const distance = loadingProgressTarget - loadingProgressDisplay;
+
+            loadingProgressLastTime = now;
+
+            if (Math.abs(distance) <= maxStep) {
+                loadingProgressDisplay = loadingProgressTarget;
+            } else {
+                loadingProgressDisplay += Math.sign(distance) * maxStep;
+            }
+
+            renderLoadingProgress(loadingProgressDisplay);
+
+            if (document.body.dataset.loading === 'true' || Math.abs(loadingProgressTarget - loadingProgressDisplay) > 0.001) {
+                loadingProgressAnimationId = requestAnimationFrame(runLoadingProgress);
+                return;
+            }
+
+            loadingProgressAnimationId = null;
+        };
+
+        const setLoadingProgressTarget = value => {
+            loadingProgressTarget = Math.max(loadingProgressTarget, clamp(value, 0, 1));
+
+            if (loadingProgressAnimationId === null) {
+                loadingProgressLastTime = performance.now();
+                loadingProgressAnimationId = requestAnimationFrame(runLoadingProgress);
+            }
+        };
+
+        const hideLoadingScreen = () => {
+            document.body.dataset.loading = 'false';
+            if (loadingScreenEl) loadingScreenEl.setAttribute('aria-hidden', 'true');
+        };
+
+        const finishLoadingScreen = () => {
+            setLoadingProgressTarget(1);
+
+            const waitForProgress = () => {
+                if (loadingProgressDisplay >= 0.995) {
+                    window.setTimeout(hideLoadingScreen, 220);
+                    return;
+                }
+
+                requestAnimationFrame(waitForProgress);
+            };
+
+            waitForProgress();
+        };
+
+        renderLoadingProgress(loadingProgressDisplay);
+        setLoadingProgressTarget(0.08);
+
+        const waitForLoadingFirstPaint = () => new Promise(resolve => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    window.setTimeout(resolve, 220);
+                });
+            });
+        });
+        const yieldToBrowser = () => new Promise(resolve => {
+            requestAnimationFrame(() => window.setTimeout(resolve, 0));
+        });
 
         if (MAINTENANCE_MODE) {
             document.body.dataset.mode = 'maintenance';
             maintenanceScreenEl.setAttribute('aria-hidden', 'false');
             siteAppEl.setAttribute('hidden', '');
+            hideLoadingScreen();
         } else {
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+            window.scrollTo(0, 0);
+            window.addEventListener('load', () => window.scrollTo(0, 0), { once: true });
+            delete document.body.dataset.mode;
+            maintenanceScreenEl.setAttribute('aria-hidden', 'true');
+            siteAppEl.removeAttribute('hidden');
+            setLoadingProgressTarget(0.12);
+            (async () => {
+            await waitForLoadingFirstPaint();
+            const THREE = await import('three');
+            await yieldToBrowser();
 
         // 场景与相机基础配置
         const canvas = document.querySelector('#webgl-canvas');
         const contactEmailEl = document.getElementById('contact-email');
         const shotFlashEl = document.getElementById('shot-flash');
         const shotSlotEl = document.getElementById('shot-slot');
-        const shotSlotLipEl = document.getElementById('shot-slot-lip');
         const shotPrintEl = document.getElementById('shot-print');
         const comingSoonEl = document.getElementById('coming-soon');
-        const aboutAsciiEl = document.getElementById('about-ascii');
         const cursorEl = document.getElementById('cursor');
-        const navLinks = document.querySelectorAll('.navbar li a');
+        const aboutSectionEl = document.getElementById('about');
+        const aboutRevealEl = document.getElementById('about-reveal');
+        const aboutDisciplineEls = document.querySelectorAll('.about-disciplines');
+        const navLinks = document.querySelectorAll('.navbar > ul > li > a');
+        const navLangOptions = document.querySelectorAll('.nav-lang-option');
+        const navAboutLink = document.querySelector('.nav-about a');
         const navHomeLink = document.querySelector('.nav-home a');
+        const navMobileHomeLink = document.querySelector('.nav-mobile-home');
+        const navMenuToggle = document.querySelector('.nav-menu-toggle');
+        const motionPreferenceQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const touchInputQuery = window.matchMedia('(hover: none) and (pointer: coarse)');
+        const getViewportTier = () => {
+            if (window.innerWidth < 768) return 'mobile';
+            if (window.innerWidth < 1024) return 'tablet';
+            if (window.innerWidth < 1280) return 'desktop';
+            return 'wide';
+        };
+        const getInputTier = () => touchInputQuery.matches ? 'touch' : 'fine';
+        const getMotionTier = () => motionPreferenceQuery.matches ? 'reduced' : 'full';
+        const getOrientationTier = () => window.innerHeight >= window.innerWidth ? 'portrait' : 'landscape';
+        const getPerformanceTier = () => {
+            const viewport = getViewportTier();
+            const input = getInputTier();
+            const motion = getMotionTier();
+            const cores = navigator.hardwareConcurrency || 4;
+            const memory = navigator.deviceMemory;
+            const dpr = window.devicePixelRatio || 1;
+
+            if (motion === 'reduced') return 'low';
+            if (memory && memory <= 3) return 'low';
+            if (viewport === 'mobile' && input === 'touch' && (cores <= 4 || dpr >= 2.75)) return 'low';
+            if (cores <= 4 || (memory && memory <= 4) || input === 'touch' || dpr >= 2.5) return 'medium';
+            return 'high';
+        };
+        const getAdaptiveContext = () => {
+            const viewport = getViewportTier();
+            const input = getInputTier();
+            const motion = getMotionTier();
+            const quality = getPerformanceTier();
+
+            return {
+                viewport,
+                input,
+                motion,
+                quality,
+                orientation: getOrientationTier(),
+                supportsHover: input === 'fine' && motion === 'full',
+                heavyMotion: quality === 'high' && motion === 'full',
+                particleMotion: quality !== 'low' && motion === 'full',
+                lensFlare: quality === 'high' && input === 'fine' && motion === 'full',
+                dprCap: quality === 'high' ? 1.25 : (quality === 'medium' ? 1.05 : 0.85)
+            };
+        };
+        let adaptiveContext = getAdaptiveContext();
+        const updateAdaptiveContext = () => {
+            adaptiveContext = getAdaptiveContext();
+            document.body.dataset.viewport = adaptiveContext.viewport;
+            document.body.dataset.input = adaptiveContext.input;
+            document.body.dataset.motion = adaptiveContext.motion;
+            document.body.dataset.quality = adaptiveContext.quality;
+            document.body.dataset.orientation = adaptiveContext.orientation;
+        };
+        const getAdaptiveGridSize = context => {
+            const gridSizes = {
+                low: { mobile: 128, tablet: 150, desktop: 168, wide: 184 },
+                medium: { mobile: 156, tablet: 180, desktop: 208, wide: 220 },
+                high: { mobile: 190, tablet: 210, desktop: 240, wide: 250 }
+            };
+
+            return gridSizes[context.quality][context.viewport];
+        };
+        updateAdaptiveContext();
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, -1.9, 20);
-
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, adaptiveContext.dprCap));
 
         // 丝滑光标状态
         let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
@@ -131,15 +334,17 @@
         const lerpFactor = 0.12;
 
         // 粒子系统核心参数
-        const GRID_SIZE = 300;
+        const GRID_SIZE = getAdaptiveGridSize(adaptiveContext);
         const PARTICLE_COUNT = GRID_SIZE * GRID_SIZE;
         const gridPhysicalSize = 35;
         const baseRotationSpeed = 0.04;
         const earthRotationSpeed = 0.6;
         const hoverInProgressSpeed = 0.08;
         const hoverOutProgressSpeed = 0.065;
-        const LINKEDIN_NODE_COUNT = 54;
-        const LINKEDIN_MAX_SEGMENTS = 54;
+        const ABOUT_REFERENCE_CAMERA_Z = 20;
+        const ABOUT_REFERENCE_CAMERA_FOV = 75;
+        const LINKEDIN_NODE_COUNT = adaptiveContext.quality === 'low' ? 32 : (adaptiveContext.quality === 'medium' ? 44 : 54);
+        const LINKEDIN_MAX_SEGMENTS = adaptiveContext.quality === 'low' ? 30 : (adaptiveContext.quality === 'medium' ? 42 : 54);
         const LINKEDIN_CONNECTION_DISTANCE = 2.45;
         const LINKEDIN_MAX_NEIGHBORS = 2;
         const LINKEDIN_FIELD_DEPTH = 2.8;
@@ -156,6 +361,8 @@
         const linkedinDustAnchors = new Uint16Array(PARTICLE_COUNT);
         const linkedinDustMotion = new Float32Array(PARTICLE_COUNT * 4);
         const linkedinDustMode = new Float32Array(PARTICLE_COUNT);
+        const HANS_FONT_STACK = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
+        const HANT_FONT_STACK = '"PingFang TC", "Hiragino Sans CNS", "Microsoft JhengHei", "Noto Sans CJK TC", sans-serif';
         let totalRotation = 0;
         let previousMotionShape = 'grid';
         let currentShape = 'grid';
@@ -163,7 +370,6 @@
         let hitZones = [];
         let linkedinNetworkVisibility = 0;
         let comingSoonAlpha = 0;
-        let aboutAsciiAlpha = 0;
         let rafId = null;
         let isSleeping = false;
         let sleepPending = false;
@@ -173,35 +379,355 @@
         let shotSequenceStart = null;
         let shotFlashStart = null;
         let wasShotHovered = false;
-        let bgLightPos = { x: 35, y: 12 };
+        let bgLightPos = { x: 50, y: -14 };
+        let navLightIntensity = 0;
         let geometry = null;
-        const aboutCharTemplateCache = new Map();
+        let material = null;
+        let lastAboutColorMix = -1;
+        let magnetSnapTimer = null;
+        let magnetTargetY = null;
+        let pageScrollAnimationId = null;
         const aboutPointColors = new Float32Array(PARTICLE_COUNT * 3);
+        const aboutDustMask = new Float32Array(PARTICLE_COUNT);
 
         let earthMapImage = null;
         let aboutPortraitImage = null;
+        let aboutShapeReady = false;
+        let currentGreetingBucket = '';
+        let activeLanguageMorphShape = null;
+        let resolveWorldMapReady = null;
+        let resolveAboutPortraitReady = null;
+        let resolveInitialFrameReady = null;
+        let initialFrameRendered = false;
+        const worldMapReady = new Promise(resolve => {
+            resolveWorldMapReady = resolve;
+        });
+        const aboutPortraitReady = new Promise(resolve => {
+            resolveAboutPortraitReady = resolve;
+        });
+        const initialFrameReady = new Promise(resolve => {
+            resolveInitialFrameReady = resolve;
+        });
+        const minimumLoadingReady = new Promise(resolve => {
+            window.setTimeout(resolve, 1800);
+        });
 
-        const getViewportTier = () => {
-            if (window.innerWidth <= 767) return 'mobile';
-            if (window.innerWidth <= 1024) return 'tablet';
-            return 'desktop';
+        const aboutDisciplineDirections = ['top', 'right', 'bottom', 'left'];
+        const ABOUT_DISCIPLINE_ROLL_MS = 920;
+        const ABOUT_DISCIPLINE_SETTLE_FALLBACK_MS = 2450;
+        const ABOUT_DISCIPLINE_SETTLE_BUFFER_MS = 140;
+        const aboutDisciplineRollTimers = new Set();
+        let aboutDisciplineLines = [];
+        let aboutDisciplineActive = false;
+        let cleanupAboutDisciplineSettleWait = null;
+        const prefersReducedMotion = motionPreferenceQuery;
+
+        const clearAboutDisciplineRollClass = charEl => {
+            if (!charEl) return;
+            charEl.classList.remove(
+                'is-rolling',
+                'is-rolling-top',
+                'is-rolling-right',
+                'is-rolling-bottom',
+                'is-rolling-left'
+            );
         };
 
-        const getInputTier = () => {
-            return window.matchMedia('(hover: none) and (pointer: coarse)').matches ? 'touch' : 'fine';
+        const scheduleAboutDisciplineRoll = (callback, delay) => {
+            const timer = window.setTimeout(() => {
+                aboutDisciplineRollTimers.delete(timer);
+                callback();
+            }, delay);
+            aboutDisciplineRollTimers.add(timer);
+            return timer;
         };
 
-        const getOrientationTier = () => {
-            return window.innerHeight >= window.innerWidth ? 'portrait' : 'landscape';
+        const clearAboutDisciplineRollTimers = () => {
+            aboutDisciplineRollTimers.forEach(timer => window.clearTimeout(timer));
+            aboutDisciplineRollTimers.clear();
         };
 
-        const updateAdaptiveContext = () => {
-            document.body.dataset.viewport = getViewportTier();
-            document.body.dataset.input = getInputTier();
-            document.body.dataset.orientation = getOrientationTier();
+        const clearAboutDisciplineSettleWait = () => {
+            if (!cleanupAboutDisciplineSettleWait) return;
+            cleanupAboutDisciplineSettleWait();
+            cleanupAboutDisciplineSettleWait = null;
+        };
+
+        const createAboutDisciplineChar = letter => {
+            const charEl = document.createElement('span');
+            const innerEl = document.createElement('span');
+            const currentEl = document.createElement('span');
+
+            charEl.className = 'about-discipline-char';
+            innerEl.className = 'about-discipline-char__inner';
+            currentEl.className = 'about-discipline-char__current';
+            currentEl.textContent = letter;
+
+            innerEl.appendChild(currentEl);
+
+            aboutDisciplineDirections.forEach(direction => {
+                const copyEl = document.createElement('span');
+                copyEl.className = `about-discipline-char__copy about-discipline-char__copy--${direction}`;
+                copyEl.textContent = letter;
+                innerEl.appendChild(copyEl);
+            });
+
+            charEl.appendChild(innerEl);
+            return charEl;
+        };
+
+        const setupAboutDisciplineRoll = () => {
+            aboutDisciplineLines = Array.from(aboutDisciplineEls).map(lineEl => {
+                const sourceText = (lineEl.dataset.sourceText || lineEl.textContent).trim().replace(/\s+/g, ' ');
+                const visualEl = document.createElement('span');
+                const lineChars = [];
+
+                lineEl.dataset.sourceText = sourceText;
+                lineEl.setAttribute('aria-label', sourceText.toUpperCase());
+                lineEl.textContent = '';
+
+                visualEl.className = 'about-discipline-visual';
+                visualEl.setAttribute('aria-hidden', 'true');
+
+                sourceText.split(' ').forEach((word, wordIndex) => {
+                    if (wordIndex > 0) {
+                        const spaceEl = document.createElement('span');
+                        spaceEl.className = 'about-discipline-space';
+                        spaceEl.textContent = ' ';
+                        visualEl.appendChild(spaceEl);
+                    }
+
+                    const wordEl = document.createElement('span');
+                    wordEl.className = 'about-discipline-word';
+
+                    Array.from(word.toUpperCase()).forEach(letter => {
+                        const charEl = createAboutDisciplineChar(letter);
+                        wordEl.appendChild(charEl);
+                        lineChars.push(charEl);
+                    });
+
+                    visualEl.appendChild(wordEl);
+                });
+
+                lineEl.appendChild(visualEl);
+                return lineChars;
+            });
+        };
+
+        const rollAboutDisciplineChar = charEl => {
+            if (!aboutDisciplineActive || !charEl || charEl.classList.contains('is-rolling')) return;
+
+            const direction = aboutDisciplineDirections[Math.floor(Math.random() * aboutDisciplineDirections.length)];
+            charEl.classList.add('is-rolling', `is-rolling-${direction}`);
+
+            scheduleAboutDisciplineRoll(() => {
+                clearAboutDisciplineRollClass(charEl);
+            }, ABOUT_DISCIPLINE_ROLL_MS + 80);
+        };
+
+        const scheduleAboutDisciplineIdleRoll = () => {
+            if (!aboutDisciplineActive || prefersReducedMotion.matches) return;
+
+            scheduleAboutDisciplineRoll(() => {
+                if (!aboutDisciplineActive) return;
+
+                const availableLines = aboutDisciplineLines.filter(line => line.length > 0);
+                const line = availableLines[Math.floor(Math.random() * availableLines.length)];
+                const charEl = line[Math.floor(Math.random() * line.length)];
+
+                rollAboutDisciplineChar(charEl);
+                scheduleAboutDisciplineIdleRoll();
+            }, 820 + Math.random() * 980);
+        };
+
+        const playAboutDisciplineRollSequence = () => {
+            if (!aboutDisciplineActive || !aboutRevealEl.classList.contains('is-visible')) return;
+
+            let lastDelay = 0;
+
+            aboutDisciplineLines.forEach((lineChars, lineIndex) => {
+                lineChars.forEach((charEl, charIndex) => {
+                    const delay = (lineIndex * 220) + (charIndex * 34);
+                    lastDelay = Math.max(lastDelay, delay);
+                    scheduleAboutDisciplineRoll(() => rollAboutDisciplineChar(charEl), delay);
+                });
+            });
+
+            scheduleAboutDisciplineRoll(scheduleAboutDisciplineIdleRoll, lastDelay + 1150);
+        };
+
+        const waitForAboutDisciplineSettle = () => {
+            clearAboutDisciplineSettleWait();
+
+            const lastDisciplineEl = aboutDisciplineEls[aboutDisciplineEls.length - 1];
+            let isSettled = false;
+
+            const settle = () => {
+                if (isSettled) return;
+                isSettled = true;
+                clearAboutDisciplineSettleWait();
+
+                if (!aboutDisciplineActive || !aboutRevealEl.classList.contains('is-visible')) return;
+                scheduleAboutDisciplineRoll(playAboutDisciplineRollSequence, ABOUT_DISCIPLINE_SETTLE_BUFFER_MS);
+            };
+
+            if (!lastDisciplineEl) {
+                scheduleAboutDisciplineRoll(settle, ABOUT_DISCIPLINE_SETTLE_FALLBACK_MS);
+                return;
+            }
+
+            const handleTransitionEnd = event => {
+                if (event.target !== lastDisciplineEl || event.propertyName !== 'transform') return;
+                settle();
+            };
+
+            lastDisciplineEl.addEventListener('transitionend', handleTransitionEnd);
+            const fallbackTimer = scheduleAboutDisciplineRoll(settle, ABOUT_DISCIPLINE_SETTLE_FALLBACK_MS);
+
+            cleanupAboutDisciplineSettleWait = () => {
+                lastDisciplineEl.removeEventListener('transitionend', handleTransitionEnd);
+                window.clearTimeout(fallbackTimer);
+                aboutDisciplineRollTimers.delete(fallbackTimer);
+            };
+        };
+
+        const startAboutDisciplineRoll = () => {
+            if (prefersReducedMotion.matches || aboutDisciplineLines.length === 0) return;
+
+            aboutDisciplineActive = true;
+            clearAboutDisciplineRollTimers();
+            waitForAboutDisciplineSettle();
+        };
+
+        const stopAboutDisciplineRoll = () => {
+            aboutDisciplineActive = false;
+            clearAboutDisciplineSettleWait();
+            clearAboutDisciplineRollTimers();
+            aboutDisciplineLines.flat().forEach(clearAboutDisciplineRollClass);
+        };
+
+        const setupAboutReveal = () => {
+            if (!aboutRevealEl) return;
+
+            const revealObserver = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const wasVisible = aboutRevealEl.classList.contains('is-visible');
+                        aboutRevealEl.classList.add('is-visible');
+                        if (!wasVisible) startAboutDisciplineRoll();
+                    } else if (entry.boundingClientRect.top > window.innerHeight * 0.6) {
+                        const wasVisible = aboutRevealEl.classList.contains('is-visible');
+                        aboutRevealEl.classList.remove('is-visible');
+                        if (wasVisible) stopAboutDisciplineRoll();
+                    }
+                });
+            }, {
+                threshold: 0.22,
+                rootMargin: '0px 0px -12% 0px'
+            });
+
+            revealObserver.observe(aboutSectionEl);
+        };
+
+        const getAboutSnapY = () => {
+            const rect = aboutSectionEl.getBoundingClientRect();
+            return rect.top + window.scrollY;
+        };
+
+        const smoothScrollToAnchor = (targetY, duration = 220) => {
+            if (pageScrollAnimationId !== null) {
+                cancelAnimationFrame(pageScrollAnimationId);
+                pageScrollAnimationId = null;
+            }
+
+            const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+            const clampedTargetY = THREE.MathUtils.clamp(targetY, 0, maxScrollY);
+            const startY = window.scrollY;
+            const deltaY = clampedTargetY - startY;
+
+            if (Math.abs(deltaY) < 2) {
+                window.scrollTo(0, clampedTargetY);
+                return;
+            }
+
+            const startedAt = performance.now();
+            magnetTargetY = clampedTargetY;
+
+            const easeInOutCubic = t => (
+                t < 0.5
+                    ? 4 * t * t * t
+                    : 1 - Math.pow(-2 * t + 2, 3) * 0.5
+            );
+
+            const step = now => {
+                const progress = THREE.MathUtils.clamp((now - startedAt) / duration, 0, 1);
+                const easedProgress = easeInOutCubic(progress);
+                window.scrollTo(0, startY + deltaY * easedProgress);
+
+                if (progress < 1) {
+                    pageScrollAnimationId = requestAnimationFrame(step);
+                    return;
+                }
+
+                window.scrollTo(0, clampedTargetY);
+                pageScrollAnimationId = null;
+                window.setTimeout(() => {
+                    if (Math.abs(window.scrollY - clampedTargetY) < 4) {
+                        magnetTargetY = null;
+                    }
+                }, 80);
+            };
+
+            pageScrollAnimationId = requestAnimationFrame(step);
+        };
+
+        const handlePageKeyNavigation = event => {
+            if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+            if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+
+            const aboutSnapY = getAboutSnapY();
+            const currentY = window.scrollY;
+            const halfwayY = aboutSnapY * 0.5;
+            const targetY = event.key === 'ArrowDown'
+                ? aboutSnapY
+                : 0;
+
+            if (event.key === 'ArrowDown' && currentY >= halfwayY && Math.abs(currentY - aboutSnapY) < 8) return;
+            if (event.key === 'ArrowUp' && currentY <= 8) return;
+
+            event.preventDefault();
+            smoothScrollToAnchor(targetY, 140);
+        };
+
+        const scheduleMagnetSnap = () => {
+            if (magnetSnapTimer) window.clearTimeout(magnetSnapTimer);
+            magnetSnapTimer = window.setTimeout(() => {
+                const aboutSnapY = getAboutSnapY();
+                const currentY = window.scrollY;
+                const anchors = [0, aboutSnapY];
+                let closestAnchor = anchors[0];
+                let closestDistance = Math.abs(currentY - anchors[0]);
+
+                for (let i = 1; i < anchors.length; i++) {
+                    const distance = Math.abs(currentY - anchors[i]);
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestAnchor = anchors[i];
+                    }
+                }
+
+                const isAlreadySettled = Math.abs(currentY - closestAnchor) < 4;
+
+                if (isAlreadySettled) return;
+                if (magnetTargetY !== null && Math.abs(magnetTargetY - closestAnchor) < 2) return;
+
+                smoothScrollToAnchor(closestAnchor, 220);
+            }, 120);
         };
 
         updateAdaptiveContext();
+        setupAboutDisciplineRoll();
+        setupAboutReveal();
         const getEarthRadius = () => {
             const viewportHeight = window.innerHeight;
             return THREE.MathUtils.clamp(viewportHeight * 0.0088, 4.6, 7.4);
@@ -296,201 +822,419 @@
             });
         };
 
-        const getVisibleSpanAtDepth = (depth, fovDeg = camera.fov, aspect = window.innerWidth / window.innerHeight) => {
-            const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(fovDeg * 0.5)) * depth;
+        const buildLanguageGlyphPoints = (text, fontStack) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            canvas.width = 820;
+            canvas.height = 340;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const fontSize = 212;
+            const tracking = 18;
+            const glyphs = Array.from(text);
+            ctx.font = `400 ${fontSize}px ${fontStack}`;
+            const widths = glyphs.map(glyph => ctx.measureText(glyph).width);
+            const totalWidth = widths.reduce((sum, width) => sum + width, 0) + tracking * (glyphs.length - 1);
+            let cursorX = canvas.width * 0.5 - totalWidth * 0.5;
+            const centerY = canvas.height * 0.56;
+
+            glyphs.forEach((glyph, index) => {
+                const width = widths[index];
+                ctx.fillText(glyph, cursorX + width * 0.5, centerY);
+                cursorX += width + tracking;
+            });
+
+            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const corePoints = [];
+            const fringePoints = [];
+            let minX = canvas.width;
+            let maxX = 0;
+            let minY = canvas.height;
+            let maxY = 0;
+
+            for (let y = 0; y < canvas.height; y += 3) {
+                for (let x = 0; x < canvas.width; x += 3) {
+                    const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+                    if (alpha < 38) continue;
+
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+
+                    if (alpha > 148) {
+                        corePoints.push({ x, y, alpha: alpha / 255 });
+                    } else {
+                        fringePoints.push({ x, y, alpha: alpha / 255 });
+                    }
+                }
+            }
+
+            const allPoints = corePoints.length ? corePoints.concat(fringePoints) : fringePoints;
+            if (!allPoints.length) {
+                return getCanvasPoints(canvas, {
+                    sampleStep: 3,
+                    alphaThreshold: 48,
+                    pointScale: 0.024,
+                    depth: 0.18
+                });
+            }
+
+            const data = new Float32Array(PARTICLE_COUNT * 3);
+            const centerX = (minX + maxX) * 0.5;
+            const centerYText = (minY + maxY) * 0.5;
+            const width = Math.max(maxX - minX, 1);
+            const height = Math.max(maxY - minY, 1);
+            const pointScale = 0.0235;
+            const coreCount = Math.floor(PARTICLE_COUNT * 0.52);
+            const veilCount = Math.floor(PARTICLE_COUNT * 0.34);
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const idx = i * 3;
+                let sample;
+                let sampleX;
+                let sampleY;
+                let depth;
+
+                if (i < coreCount) {
+                    sample = corePoints.length ? corePoints[Math.floor(Math.random() * corePoints.length)] : allPoints[Math.floor(Math.random() * allPoints.length)];
+                    const jitter = 2.2 + (1 - sample.alpha) * 7.5 + Math.random() * 5.4;
+                    sampleX = sample.x + (Math.random() - 0.5) * jitter;
+                    sampleY = sample.y + (Math.random() - 0.5) * jitter;
+                    depth = (Math.random() - 0.5) * 0.12;
+                } else if (i < coreCount + veilCount) {
+                    sample = allPoints[Math.floor(Math.random() * allPoints.length)];
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = 4 + Math.random() * 16;
+                    sampleX = sample.x + Math.cos(angle) * radius + (Math.random() - 0.5) * 6;
+                    sampleY = sample.y + Math.sin(angle) * radius * 0.9 + (Math.random() - 0.5) * 6;
+                    depth = (Math.random() - 0.5) * 0.22;
+                } else {
+                    sample = allPoints[Math.floor(Math.random() * allPoints.length)];
+                    const dx = sample.x - centerX;
+                    const dy = sample.y - centerYText;
+                    const length = Math.max(Math.hypot(dx, dy), 1);
+                    const drift = 10 + Math.random() * 26;
+                    const spread = 8 + Math.random() * 14;
+                    sampleX = sample.x + (dx / length) * drift + (Math.random() - 0.5) * spread;
+                    sampleY = sample.y + (dy / length) * drift * 0.72 + (Math.random() - 0.5) * spread;
+                    depth = (Math.random() - 0.5) * 0.36;
+                }
+
+                data[idx] = (sampleX - centerX) * pointScale;
+                data[idx + 1] = -(sampleY - centerYText) * pointScale;
+                data[idx + 2] = depth;
+            }
+
+            return data;
+        };
+
+        const getGreetingBucket = () => {
+            const hour = new Date().getHours();
+            if (hour >= 5 && hour < 11) return 'morning';
+            if (hour >= 11 && hour < 14) return 'noon';
+            if (hour >= 14 && hour < 18) return 'afternoon';
+            if (hour >= 18 && hour < 23) return 'evening';
+            return 'rest';
+        };
+
+        const getGreetingText = (variant, bucket) => {
+            if (variant === 'zhHans') {
+                if (bucket === 'morning') return '早上好';
+                if (bucket === 'noon') return '中午好';
+                if (bucket === 'afternoon') return '下午好';
+                if (bucket === 'evening') return '晚上好';
+                return '早点休息';
+            }
+
+            if (bucket === 'morning') return '早晨';
+            if (bucket === 'noon') return '晏晝好';
+            if (bucket === 'afternoon') return '下晝好';
+            if (bucket === 'evening') return '晚上好';
+            return '早啲休息';
+        };
+
+        const refreshLanguageShapes = (force = false) => {
+            const nextBucket = getGreetingBucket();
+            if (!force && nextBucket === currentGreetingBucket) return;
+
+            currentGreetingBucket = nextBucket;
+            precomputedShapes.zhHans = buildLanguageGlyphPoints(
+                getGreetingText('zhHans', nextBucket),
+                HANS_FONT_STACK
+            );
+            precomputedShapes.zhHant = buildLanguageGlyphPoints(
+                getGreetingText('zhHant', nextBucket),
+                HANT_FONT_STACK
+            );
+
+            if (geometry && (currentShape === 'zhHans' || hoveredShape === 'zhHans')) {
+                geometry.attributes.aTarget.array.set(precomputedShapes.zhHans);
+                geometry.attributes.aMorphTarget.array.set(precomputedShapes.zhHans);
+                geometry.attributes.aTarget.needsUpdate = true;
+                geometry.attributes.aMorphTarget.needsUpdate = true;
+                currentShape = 'zhHans';
+                activeLanguageMorphShape = null;
+                material.uniforms.uShapeMorph.value = 0;
+            }
+
+            if (geometry && (currentShape === 'zhHant' || hoveredShape === 'zhHant')) {
+                geometry.attributes.aTarget.array.set(precomputedShapes.zhHant);
+                geometry.attributes.aMorphTarget.array.set(precomputedShapes.zhHant);
+                geometry.attributes.aTarget.needsUpdate = true;
+                geometry.attributes.aMorphTarget.needsUpdate = true;
+                currentShape = 'zhHant';
+                activeLanguageMorphShape = null;
+                material.uniforms.uShapeMorph.value = 0;
+            }
+        };
+
+        const getAboutPortraitMetrics = () => {
+            const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(ABOUT_REFERENCE_CAMERA_FOV * 0.5)) * ABOUT_REFERENCE_CAMERA_Z;
+            const visibleWidth = visibleHeight * (window.innerWidth / window.innerHeight);
             return {
-                height: visibleHeight,
-                width: visibleHeight * aspect
+                // Lock the portrait to a stable viewport-relative footprint in both axes.
+                targetHeight: visibleHeight * 0.64,
+                targetWidth: visibleWidth * 0.255,
+                anchorX: visibleWidth * 0.275,
+                anchorY: -0.38
             };
         };
 
-        const getAboutCharTemplate = char => {
-            if (aboutCharTemplateCache.has(char)) return aboutCharTemplateCache.get(char);
-
-            const code = char.codePointAt(0);
-            const isBraille = code >= 0x2800 && code <= 0x28ff;
-
-            let template;
-            if (isBraille) {
-                const mask = code - 0x2800;
-                const brailleDots = [
-                    [-0.28, -0.38], // 1
-                    [-0.28, -0.1],  // 2
-                    [-0.28, 0.18],  // 3
-                    [-0.28, 0.45],  // 7
-                    [0.2, -0.38],   // 4
-                    [0.2, -0.1],    // 5
-                    [0.2, 0.18],    // 6
-                    [0.2, 0.45]     // 8
-                ];
-                const points = [];
-                for (let bit = 0; bit < 8; bit++) {
-                    if ((mask & (1 << bit)) === 0) continue;
-                    const [cx, cy] = brailleDots[bit];
-                    points.push({ x: cx, y: cy });
-                    points.push({ x: cx - 0.06, y: cy });
-                    points.push({ x: cx + 0.06, y: cy });
-                    points.push({ x: cx, y: cy - 0.06 });
-                    points.push({ x: cx, y: cy + 0.06 });
-                }
-                template = points.length ? points : [{ x: 0, y: 0 }];
-            } else {
-                const charCanvas = document.createElement('canvas');
-                const charCtx = charCanvas.getContext('2d', { willReadFrequently: true });
-                charCanvas.width = 44;
-                charCanvas.height = 44;
-                charCtx.clearRect(0, 0, charCanvas.width, charCanvas.height);
-                charCtx.fillStyle = '#000000';
-                charCtx.font = '400 28px Menlo, Monaco, Consolas, monospace';
-                charCtx.textAlign = 'center';
-                charCtx.textBaseline = 'middle';
-                charCtx.fillText(char, charCanvas.width * 0.5, charCanvas.height * 0.54);
-
-                const pixels = charCtx.getImageData(0, 0, charCanvas.width, charCanvas.height).data;
-                const points = [];
-                for (let y = 0; y < charCanvas.height; y += 2) {
-                    for (let x = 0; x < charCanvas.width; x += 2) {
-                        const alpha = pixels[(y * charCanvas.width + x) * 4 + 3];
-                        if (alpha > 72) {
-                            points.push({
-                                x: (x / charCanvas.width) - 0.5,
-                                y: (y / charCanvas.height) - 0.5
-                            });
-                        }
-                    }
-                }
-                template = points.length ? points : [{ x: 0, y: 0 }];
+        const buildAboutPortraitShape = metrics => {
+            if (!aboutPortraitImage) {
+                return {
+                    positions: new Float32Array(precomputedShapes.grid),
+                    colors: new Float32Array(basePointColors),
+                    dustMask: new Float32Array(PARTICLE_COUNT)
+                };
             }
-
-            aboutCharTemplateCache.set(char, template);
-            return template;
-        };
-
-        const getBrailleChar = intensity => {
-            if (intensity < 0.05) return ' ';
-            if (intensity < 0.12) return '⠁';
-            if (intensity < 0.2) return '⠃';
-            if (intensity < 0.3) return '⠇';
-            if (intensity < 0.4) return '⠏';
-            if (intensity < 0.52) return '⠟';
-            if (intensity < 0.66) return '⠿';
-            if (intensity < 0.8) return '⣟';
-            if (intensity < 0.92) return '⣷';
-            return '⣿';
-        };
-
-        const buildAboutAsciiLines = (columns, rows) => {
-            if (!aboutPortraitImage) return null;
 
             const sampleCanvas = document.createElement('canvas');
             const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
-            sampleCanvas.width = columns;
-            sampleCanvas.height = rows;
+            sampleCanvas.width = 420;
+            sampleCanvas.height = 560;
 
             const sourceAspect = aboutPortraitImage.width / aboutPortraitImage.height;
-            const targetHeight = sampleCanvas.height * 1.18335;
-            const targetWidth = targetHeight * sourceAspect;
-            const navHeight = 84;
-            const usableHeight = Math.max(window.innerHeight - navHeight, 320);
-            const anchorX = sampleCanvas.width * 0.75;
-            const anchorY = THREE.MathUtils.clamp(
-                ((window.innerHeight * 0.50) - navHeight) / usableHeight,
-                0,
-                1
-            ) * sampleCanvas.height;
-            const dx = anchorX - targetWidth * 0.5;
-            const dy = anchorY - targetHeight * 0.5;
+            const drawHeight = sampleCanvas.height;
+            const drawWidth = drawHeight * sourceAspect;
+            const dx = (sampleCanvas.width - drawWidth) * 0.5;
+            const dy = 0;
 
             sampleCtx.clearRect(0, 0, sampleCanvas.width, sampleCanvas.height);
-            sampleCtx.drawImage(
-                aboutPortraitImage,
-                dx, dy, targetWidth, targetHeight
-            );
+            sampleCtx.drawImage(aboutPortraitImage, dx, dy, drawWidth, drawHeight);
 
             const pixels = sampleCtx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height).data;
-            const lines = [];
+            const candidates = [];
+            let minX = Infinity;
+            let maxX = -Infinity;
+            let minY = Infinity;
+            let maxY = -Infinity;
+            let subjectLeft = sampleCanvas.width;
+            let subjectRight = 0;
+            let subjectTop = sampleCanvas.height;
+            let subjectBottom = 0;
 
-            for (let y = 0; y < rows; y++) {
-                let line = '';
-                for (let x = 0; x < columns; x++) {
-                    const idx = (y * columns + x) * 4;
+            for (let y = 1; y < sampleCanvas.height - 1; y++) {
+                for (let x = 1; x < sampleCanvas.width - 1; x++) {
+                    const idx = (y * sampleCanvas.width + x) * 4;
+                    const r = pixels[idx] / 255;
+                    const g = pixels[idx + 1] / 255;
+                    const b = pixels[idx + 2] / 255;
+                    const luminance = r * 0.2126 + g * 0.7152 + b * 0.0722;
+                    if (luminance < 0.085) continue;
+                    subjectLeft = Math.min(subjectLeft, x);
+                    subjectRight = Math.max(subjectRight, x);
+                    subjectTop = Math.min(subjectTop, y);
+                    subjectBottom = Math.max(subjectBottom, y);
+                }
+            }
+
+            if (subjectRight <= subjectLeft || subjectBottom <= subjectTop) {
+                return {
+                    positions: new Float32Array(precomputedShapes.grid),
+                    colors: new Float32Array(basePointColors),
+                    dustMask: new Float32Array(PARTICLE_COUNT)
+                };
+            }
+
+            subjectLeft = Math.max(0, subjectLeft - 16);
+            subjectRight = Math.min(sampleCanvas.width - 1, subjectRight + 16);
+            subjectTop = Math.max(0, subjectTop - 18);
+            subjectBottom = Math.min(sampleCanvas.height - 1, subjectBottom + 22);
+
+            const subjectCenterX = (subjectLeft + subjectRight) * 0.5;
+            const subjectCenterY = (subjectTop + subjectBottom) * 0.5;
+            const subjectWidth = Math.max(subjectRight - subjectLeft, 1);
+            const subjectHeight = Math.max(subjectBottom - subjectTop, 1);
+            const bayer4x4 = [
+                0 / 16, 8 / 16, 2 / 16, 10 / 16,
+                12 / 16, 4 / 16, 14 / 16, 6 / 16,
+                3 / 16, 11 / 16, 1 / 16, 9 / 16,
+                15 / 16, 7 / 16, 13 / 16, 5 / 16
+            ];
+
+            for (let y = subjectTop + 1; y < subjectBottom - 1; y += 2) {
+                for (let x = subjectLeft + 1; x < subjectRight - 1; x += 2) {
+                    const idx = (y * sampleCanvas.width + x) * 4;
                     const r = pixels[idx] / 255;
                     const g = pixels[idx + 1] / 255;
                     const b = pixels[idx + 2] / 255;
                     const luminance = r * 0.2126 + g * 0.7152 + b * 0.0722;
 
-                    const contrast = THREE.MathUtils.clamp((luminance - 0.06) / 0.78, 0, 1);
-                    const boosted = Math.pow(contrast, 0.86);
-                    const faceDetail = Math.pow(THREE.MathUtils.clamp((contrast - 0.1) / 0.9, 0, 1), 1.08);
-                    const intensity = THREE.MathUtils.clamp(faceDetail * 1.08, 0, 1);
+                    const leftIdx = idx - 4;
+                    const rightIdx = idx + 4;
+                    const upIdx = idx - sampleCanvas.width * 4;
+                    const downIdx = idx + sampleCanvas.width * 4;
 
-                    line += getBrailleChar(boosted);
+                    const lumLeft = (pixels[leftIdx] * 0.2126 + pixels[leftIdx + 1] * 0.7152 + pixels[leftIdx + 2] * 0.0722) / 255;
+                    const lumRight = (pixels[rightIdx] * 0.2126 + pixels[rightIdx + 1] * 0.7152 + pixels[rightIdx + 2] * 0.0722) / 255;
+                    const lumUp = (pixels[upIdx] * 0.2126 + pixels[upIdx + 1] * 0.7152 + pixels[upIdx + 2] * 0.0722) / 255;
+                    const lumDown = (pixels[downIdx] * 0.2126 + pixels[downIdx + 1] * 0.7152 + pixels[downIdx + 2] * 0.0722) / 255;
+
+                    const gradX = lumRight - lumLeft;
+                    const gradY = lumDown - lumUp;
+                    const edge = Math.min(1, Math.sqrt(gradX * gradX + gradY * gradY) * 3.4);
+                    const subjectMask = THREE.MathUtils.clamp((luminance - 0.085) / 0.55, 0, 1);
+                    const density = THREE.MathUtils.clamp(subjectMask * 0.78 + edge * 0.92, 0, 1);
+                    const normDx = Math.abs(x - subjectCenterX) / subjectWidth;
+                    const normDy = Math.abs(y - subjectCenterY) / subjectHeight;
+                    const boundLeft = (x - subjectLeft) / subjectWidth;
+                    const boundRight = (subjectRight - x) / subjectWidth;
+                    const boundTop = (y - subjectTop) / subjectHeight;
+                    const boundBottom = (subjectBottom - y) / subjectHeight;
+                    const boundaryDistance = Math.min(boundLeft, boundRight, boundTop, boundBottom);
+                    const boundaryFade = THREE.MathUtils.smoothstep(boundaryDistance, 0.028, 0.165);
+                    const isolationPenalty = normDx > 0.34 && normDy < 0.42 ? 0.2 : 1;
+                    const centerFalloff = Math.max(0, 1 - Math.sqrt(normDx * normDx + normDy * normDy) * 1.9);
+                    const faceCoreBoost = 1 + centerFalloff * 0.55;
+                    const gatedDensity = density * isolationPenalty * boundaryFade;
+
+                    if (gatedDensity < 0.12) continue;
+                    const densityGate = THREE.MathUtils.clamp((gatedDensity * faceCoreBoost - 0.06) / 0.9, 0, 1);
+                    const ditherThreshold = bayer4x4[(((y >> 1) & 3) * 4) + ((x >> 1) & 3)];
+                    if (densityGate <= ditherThreshold) continue;
+
+                    const px = x - sampleCanvas.width * 0.5;
+                    const py = sampleCanvas.height * 0.5 - y;
+                    candidates.push({
+                        x: px,
+                        y: py,
+                        edge,
+                        luminance,
+                        r,
+                        g,
+                        b,
+                        weight: gatedDensity * faceCoreBoost
+                    });
+                    minX = Math.min(minX, px);
+                    maxX = Math.max(maxX, px);
+                    minY = Math.min(minY, py);
+                    maxY = Math.max(maxY, py);
                 }
-                lines.push(line);
             }
 
-            return lines;
-        };
-
-        const buildAboutFallbackLines = (columns, rows, chars) => {
-            const lines = [];
-            for (let y = 0; y < rows; y++) {
-                let line = '';
-                const ny = y / Math.max(rows - 1, 1);
-                for (let x = 0; x < columns; x++) {
-                    const nx = x / Math.max(columns - 1, 1);
-                    const px = nx * 2 - 1;
-                    const py = ny * 2 - 1;
-
-                    const head = Math.exp(-(((px + 0.02) / 0.34) ** 2 + ((py + 0.18) / 0.52) ** 2) * 2.2);
-                    const shoulders = Math.exp(-(((px) / 0.78) ** 2 + ((py - 0.54) / 0.3) ** 2) * 2.8);
-                    const torso = Math.exp(-(((px + 0.02) / 0.44) ** 2 + ((py - 0.08) / 0.86) ** 2) * 3.6);
-                    const leftEye = Math.exp(-(((px + 0.12) / 0.05) ** 2 + ((py + 0.12) / 0.028) ** 2) * 10.0);
-                    const rightEye = Math.exp(-(((px - 0.08) / 0.05) ** 2 + ((py + 0.12) / 0.028) ** 2) * 10.0);
-                    const nose = Math.exp(-(((px + 0.01) / 0.045) ** 2 + ((py + 0.01) / 0.12) ** 2) * 7.0);
-                    const mouth = Math.exp(-(((px + 0.015) / 0.11) ** 2 + ((py - 0.18) / 0.042) ** 2) * 8.0);
-                    const vignette = Math.max(0, 1 - Math.sqrt(px * px + py * py) * 0.9);
-                    const grain = (
-                        Math.sin(x * 0.37 + y * 0.11) +
-                        Math.cos(x * 0.19 - y * 0.23) +
-                        Math.sin((x + y) * 0.07)
-                    ) / 3;
-
-                    let intensity =
-                        head * 0.58 +
-                        shoulders * 0.24 +
-                        torso * 0.18 +
-                        leftEye * 0.55 +
-                        rightEye * 0.55 +
-                        nose * 0.32 +
-                        mouth * 0.24;
-
-                    intensity *= 0.82 + vignette * 0.28;
-                    intensity += grain * 0.06 + 0.05;
-                    intensity = THREE.MathUtils.clamp(intensity, 0, 1);
-
-                    const charIndex = Math.min(chars.length - 1, Math.floor(intensity * (chars.length - 1)));
-                    line += chars[charIndex];
-                }
-                lines.push(line);
+            if (!candidates.length) {
+                return {
+                    positions: new Float32Array(precomputedShapes.grid),
+                    colors: new Float32Array(basePointColors),
+                    dustMask: new Float32Array(PARTICLE_COUNT)
+                };
             }
-            return lines;
+
+            const positions = new Float32Array(PARTICLE_COUNT * 3);
+            const colors = new Float32Array(PARTICLE_COUNT * 3);
+            const dustMask = new Float32Array(PARTICLE_COUNT);
+            const rawWidth = Math.max(maxX - minX, 1);
+            const rawHeight = Math.max(maxY - minY, 1);
+            const centerX = (minX + maxX) * 0.5;
+            const centerY = (minY + maxY) * 0.5;
+            const shapeScale = Math.min(
+                metrics.targetWidth / rawWidth,
+                metrics.targetHeight / rawHeight
+            );
+            const dustCount = 0;
+            const portraitCount = PARTICLE_COUNT - dustCount;
+            const portraitSources = candidates;
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const idx = i * 3;
+                if (i < dustCount) {
+                    continue;
+                }
+
+                const portraitIndex = i - dustCount;
+                if (!portraitSources.length) {
+                    positions[idx] = -48 - Math.random() * 6;
+                    positions[idx + 1] = 26 + Math.random() * 6;
+                    positions[idx + 2] = -18 - Math.random() * 4;
+                    colors[idx] = 0;
+                    colors[idx + 1] = 0;
+                    colors[idx + 2] = 0;
+                    continue;
+                }
+
+                const sourceIndex = portraitIndex % portraitSources.length;
+                const repeatIndex = Math.floor(portraitIndex / portraitSources.length);
+                const source = portraitSources[sourceIndex];
+                const haloMix = portraitIndex > portraitCount * 0.94 ? 1 : 0;
+                const repeatAngle = sourceIndex * 2.399963229728653 + repeatIndex * 0.73;
+                const repeatRadius = Math.min(0.0032, repeatIndex * 0.00048);
+                const jitterScale = haloMix ? 0.006 + Math.random() * 0.01 : 0.0007 + (1 - Math.min(source.weight, 1)) * 0.0017;
+                const swirl = haloMix ? Math.random() * Math.PI * 2 : 0;
+                const radial = haloMix ? Math.random() * (0.01 + source.edge * 0.018) : 0;
+
+                positions[idx] = ((source.x - centerX) * shapeScale) + metrics.anchorX + Math.cos(repeatAngle) * repeatRadius + Math.cos(swirl) * radial + (Math.random() - 0.5) * jitterScale;
+                positions[idx + 1] = ((source.y - centerY) * shapeScale) + metrics.anchorY + Math.sin(repeatAngle) * repeatRadius * 0.92 + Math.sin(swirl) * radial * 0.85 + (Math.random() - 0.5) * jitterScale;
+                positions[idx + 2] = haloMix ? (Math.random() - 0.5) * 0.035 : (Math.random() - 0.5) * (0.0045 + source.edge * 0.012);
+
+                const brightnessLift = haloMix ? 0.05 : Math.min(0.14, source.edge * 0.08);
+                const baseR = THREE.MathUtils.clamp(source.r + brightnessLift, 0, 1);
+                const baseG = THREE.MathUtils.clamp(source.g + brightnessLift, 0, 1);
+                const baseB = THREE.MathUtils.clamp(source.b + brightnessLift, 0, 1);
+                const greenTint = 0.12;
+
+                colors[idx] = THREE.MathUtils.lerp(baseR, 0.68, greenTint * 0.45);
+                colors[idx + 1] = THREE.MathUtils.lerp(baseG, 0.92, greenTint);
+                colors[idx + 2] = THREE.MathUtils.lerp(baseB, 0.74, greenTint * 0.6);
+                dustMask[i] = 0;
+            }
+
+            return {
+                positions,
+                colors,
+                dustMask
+            };
         };
 
-        const buildAboutAsciiPlaceholder = () => {
-            aboutAsciiEl.textContent = '';
-            precomputedShapes.about = new Float32Array(precomputedShapes.grid);
-            aboutPointColors.set(basePointColors);
+        const buildAboutShape = () => {
+            const metrics = getAboutPortraitMetrics();
+            const aboutShape = buildAboutPortraitShape(metrics);
+
+            precomputedShapes.about = aboutShape.positions;
+            aboutPointColors.set(aboutShape.colors);
+            aboutDustMask.set(aboutShape.dustMask);
+            aboutShapeReady = true;
         };
 
         const refreshAboutShape = () => {
-            buildAboutAsciiPlaceholder();
+            buildAboutShape();
             if (!geometry) return;
             if (currentShape === 'about' || hoveredShape === 'about') {
                 geometry.attributes.aTarget.array.set(precomputedShapes.about);
+                geometry.attributes.aMorphTarget.array.set(precomputedShapes.about);
                 geometry.attributes.aTarget.needsUpdate = true;
+                geometry.attributes.aMorphTarget.needsUpdate = true;
                 currentShape = 'about';
+                activeLanguageMorphShape = null;
+                material.uniforms.uShapeMorph.value = 0;
             }
+            geometry.attributes.aAboutDust.array.set(aboutDustMask);
+            geometry.attributes.aAboutDust.needsUpdate = true;
         };
 
         const isPointInPolygon = (x, y, polygon) => {
@@ -649,16 +1393,15 @@
             }
             precomputedShapes.grid = grid;
 
-            const indices = Array.from({ length: PARTICLE_COUNT }, (_, i) => i).sort(() => Math.random() - 0.5);
-
             // B形状生成
             const bPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
             bPath.setAttribute("d", "M545 128C600.228 128 645 172.772 645 228V253C645 295.964 617.905 332.597 579.87 346.75C617.461 360.738 644.366 396.685 644.988 439H645V503C645 572.036 589.036 628 520 628H145L182.5 478H438C451.807 478 463 466.807 463 453C463 439.193 451.807 428 438 428H195L220 328H475.5C489.307 328 500.5 316.807 500.5 303C500.5 289.193 489.307 278 475.5 278H232.5L270 128H545Z");
             const bLen = bPath.getTotalLength();
             const bData = new Float32Array(PARTICLE_COUNT * 3);
+            const homePermutationStep = 7919;
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const p = bPath.getPointAtLength((1 - i / PARTICLE_COUNT) * bLen);
-                const tIdx = indices[i] * 3;
+                const tIdx = ((i * homePermutationStep) % PARTICLE_COUNT) * 3;
                 bData[tIdx] = (p.x - 395) * 0.025;
                 bData[tIdx + 1] = -(p.y - 395) * 0.025;
                 bData[tIdx + 2] = (Math.random() - 0.5) * 2.0;
@@ -672,23 +1415,54 @@
             img.onload = () => {
                 earthMapImage = img;
                 precomputedShapes.en = getEarthPoints(img);
+                setLoadingProgressTarget(0.84);
+                if (resolveWorldMapReady) resolveWorldMapReady();
             };
-            img.onerror = () => { precomputedShapes.en = precomputedShapes.grid; };
+            img.onerror = () => {
+                precomputedShapes.en = precomputedShapes.grid;
+                setLoadingProgressTarget(0.84);
+                if (resolveWorldMapReady) resolveWorldMapReady();
+            };
             img.src = 'assets/images/world-map.svg';
+            refreshLanguageShapes(true);
+
+            const portraitImg = new Image();
+            portraitImg.onload = () => {
+                aboutPortraitImage = portraitImg;
+                aboutShapeReady = false;
+                buildAboutShape();
+                if (currentShape === 'about') refreshAboutShape();
+                setLoadingProgressTarget(0.94);
+                if (resolveAboutPortraitReady) resolveAboutPortraitReady();
+            };
+            portraitImg.onerror = () => {
+                aboutPortraitImage = null;
+                aboutShapeReady = false;
+                setLoadingProgressTarget(0.94);
+                if (resolveAboutPortraitReady) resolveAboutPortraitReady();
+            };
+            portraitImg.src = 'assets/images/about-portrait.jpg';
+
         };
 
+        await yieldToBrowser();
         initShapes();
+        setLoadingProgressTarget(0.48);
+        await yieldToBrowser();
 
         geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(precomputedShapes.grid, 3));
+        geometry.setAttribute('aMorphTarget', new THREE.BufferAttribute(new Float32Array(precomputedShapes.grid), 3));
         geometry.setAttribute('aTarget', new THREE.BufferAttribute(new Float32Array(precomputedShapes.grid), 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 3), 3));
+        geometry.setAttribute('aAboutDust', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT), 1));
         geometry.setAttribute('aMotion', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 4), 4));
         geometry.setAttribute('aNetworkNode', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT), 1));
         geometry.setAttribute('aPointScale', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT), 1));
         geometry.setAttribute('aHomeMotion', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 4), 4));
 
         const pointColors = geometry.attributes.color.array;
+        const pointAboutDust = geometry.attributes.aAboutDust.array;
         const pointMotion = geometry.attributes.aMotion.array;
         const pointNetworkNode = geometry.attributes.aNetworkNode.array;
         const pointScale = geometry.attributes.aPointScale.array;
@@ -711,7 +1485,12 @@
             aboutPointColors[idx] = baseColor.r;
             aboutPointColors[idx + 1] = baseColor.g;
             aboutPointColors[idx + 2] = baseColor.b;
+            pointAboutDust[i] = 0;
             pointScale[i] = 0.56 + Math.random() * 0.18;
+            pointMotion[motionIdx] = Math.random() * Math.PI * 2;
+            pointMotion[motionIdx + 1] = Math.random() * Math.PI * 2;
+            pointMotion[motionIdx + 2] = 0.22 + Math.random() * 0.48;
+            pointMotion[motionIdx + 3] = 0.02 + Math.random() * 0.05;
             pointHomeMotion[motionIdx] = Math.random() * Math.PI * 2;
             pointHomeMotion[motionIdx + 1] = Math.random() * Math.PI * 2;
             pointHomeMotion[motionIdx + 2] = 0.45 + Math.random() * 0.55;
@@ -721,25 +1500,30 @@
             pointColorMotion[colorMotionIdx + 2] = 0.2 + Math.random() * 0.24;
             pointColorMotion[colorMotionIdx + 3] = 0.15 + Math.random() * 0.85;
         }
-        buildAboutAsciiPlaceholder();
-
-        const material = new THREE.ShaderMaterial({
+        pointAboutDust.set(aboutDustMask);
+        await yieldToBrowser();
+        material = new THREE.ShaderMaterial({
             transparent: true, depthWrite: false, blending: THREE.NormalBlending,
             uniforms: {
                 uTime: { value: 0 },
                 uProgress: { value: 0 },
+                uShapeMorph: { value: 0 },
                 uLinkedinMix: { value: 0 },
                 uAboutMix: { value: 0 },
+                uAboutMotionStrength: { value: 0 },
+                uLangMix: { value: 0 },
                 uWaveStrength: { value: 1 },
                 uHomeMotionStrength: { value: 0 },
                 uCenteredViewMix: { value: 0 },
-                uColorBreathStrength: { value: 1 },
+                uColorBreathStrength: { value: adaptiveContext.heavyMotion ? 1 : (adaptiveContext.quality === 'medium' ? 0.45 : 0) },
                 uSceneOpacity: { value: 1 }
             },
             vertexShader: `
-                uniform float uTime; uniform float uProgress; uniform float uLinkedinMix; uniform float uAboutMix; uniform float uWaveStrength; uniform float uHomeMotionStrength; uniform float uCenteredViewMix; uniform float uColorBreathStrength; uniform float uSceneOpacity; attribute vec3 aTarget; attribute vec3 color; attribute vec4 aMotion; attribute vec4 aHomeMotion; attribute vec4 aColorMotion; attribute float aNetworkNode; attribute float aPointScale; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix; varying float vOverlaySuppress; varying float vAboutFade;
+                uniform float uTime; uniform float uProgress; uniform float uShapeMorph; uniform float uLinkedinMix; uniform float uAboutMix; uniform float uAboutMotionStrength; uniform float uLangMix; uniform float uWaveStrength; uniform float uHomeMotionStrength; uniform float uCenteredViewMix; uniform float uColorBreathStrength; uniform float uSceneOpacity; attribute vec3 aTarget; attribute vec3 aMorphTarget; attribute vec3 color; attribute vec4 aMotion; attribute vec4 aHomeMotion; attribute vec4 aColorMotion; attribute float aNetworkNode; attribute float aPointScale; attribute float aAboutDust; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix; varying float vOverlaySuppress; varying float vAboutFade; varying float vAboutMask; varying float vAboutDust;
                 void main() {
-                    vec3 finalPos = mix(position, aTarget, uProgress);
+                    float progressEase = smoothstep(0.0, 1.0, uProgress);
+                    vec3 resolvedTarget = mix(aTarget, aMorphTarget, uShapeMorph);
+                    vec3 finalPos = mix(position, resolvedTarget, progressEase);
                     vec3 homeDrift = vec3(
                         sin(uTime * aHomeMotion.z + aHomeMotion.x) * aHomeMotion.w,
                         cos(uTime * (aHomeMotion.z * 1.13) + aHomeMotion.y) * aHomeMotion.w,
@@ -759,15 +1543,55 @@
                         sin(uTime * (aMotion.z * 0.51) + aMotion.x + aMotion.y) * (0.015 + aPointScale * 0.018)
                     );
                     finalPos += centeredJitter * uCenteredViewMix * (1.0 - uLinkedinMix);
+                    vec3 aboutDrift = vec3(
+                        (
+                            sin(uTime * (aMotion.z * 0.95) + aMotion.x * 1.91 + aMotion.y * 0.63) +
+                            cos(uTime * (aMotion.z * 0.57) + aMotion.y * 1.38)
+                        ) * (0.04 + aPointScale * 0.05),
+                        (
+                            cos(uTime * (aMotion.z * 0.84) + aMotion.y * 1.67 + aMotion.x * 0.41) +
+                            sin(uTime * (aMotion.z * 0.49) + aMotion.x * 1.12)
+                        ) * (0.05 + aPointScale * 0.06),
+                        (
+                            sin(uTime * (aMotion.z * 0.76) + aMotion.x * 0.84 + aMotion.y * 1.17) +
+                            cos(uTime * (aMotion.z * 0.52) + aMotion.y * 0.93)
+                        ) * (0.03 + aPointScale * 0.04)
+                    );
+                    finalPos += aboutDrift * uAboutMotionStrength * 0.6 * (1.0 - uLinkedinMix);
+                    vec3 aboutDustDrift = vec3(
+                        sin(uTime * (0.12 + aMotion.z * 0.12) + aMotion.x * 1.8 + aTarget.y * 0.06) * 0.42,
+                        cos(uTime * (0.1 + aMotion.z * 0.08) + aMotion.y * 1.6 + aTarget.x * 0.04) * 0.24,
+                        sin(uTime * (0.14 + aMotion.z * 0.1) + aMotion.x + aMotion.y) * 1.1
+                    );
+                    finalPos += aboutDustDrift * aAboutDust * uAboutMix;
+                    vec3 langDrift = vec3(
+                        (
+                            sin(uTime * (0.48 + aMotion.z * 0.34) + aMotion.x * 1.34 + aMotion.y * 0.42) +
+                            cos(uTime * (0.31 + aMotion.z * 0.22) + aMotion.y * 1.08) +
+                            sin(uTime * (0.16 + aMotion.z * 0.12) + aMotion.x * 2.1)
+                        ) * (0.05 + aPointScale * 0.06),
+                        (
+                            cos(uTime * (0.42 + aMotion.z * 0.28) + aMotion.y * 1.28 + aMotion.x * 0.36) +
+                            sin(uTime * (0.23 + aMotion.z * 0.14) + aMotion.x * 0.94) +
+                            cos(uTime * (0.12 + aMotion.z * 0.1) + aMotion.y * 1.86)
+                        ) * (0.058 + aPointScale * 0.07),
+                        (
+                            sin(uTime * (0.34 + aMotion.z * 0.26) + aMotion.x * 0.86 + aMotion.y * 1.06) +
+                            cos(uTime * (0.18 + aMotion.z * 0.12) + aMotion.y * 0.82)
+                        ) * (0.07 + aPointScale * 0.08)
+                    );
+                    finalPos += langDrift * uLangMix * 0.92;
                     vec4 mvPos = modelViewMatrix * vec4(finalPos, 1.0);
-                    float defaultPointSize = (20.5 + uProgress * 35.5) * (1.0 / -mvPos.z);
+                    float defaultPointSize = (20.5 + progressEase * 35.5) * (1.0 / -mvPos.z);
                     float linkedinDepthFactor = clamp(18.0 / max(-mvPos.z, 0.001), 0.9, 1.16);
                     float linkedinScale = aPointScale * linkedinDepthFactor;
                     float linkedinNodeMix = uLinkedinMix * aNetworkNode;
                     float hiddenMix = uLinkedinMix * (1.0 - aNetworkNode);
-                    float linkedinPointSize = mix(defaultPointSize, (7.0 + uProgress * 12.0) * linkedinScale, linkedinNodeMix);
+                    float linkedinPointSize = mix(defaultPointSize, (7.0 + progressEase * 12.0) * linkedinScale, linkedinNodeMix);
                     float centeredPointSize = defaultPointSize * 0.86;
                     float basePointSize = mix(defaultPointSize, centeredPointSize, uCenteredViewMix * (1.0 - uLinkedinMix));
+                    float dustDepthScale = clamp(1.0 + finalPos.z * 0.18, 0.34, 2.1);
+                    basePointSize *= mix(1.0, 0.5 + dustDepthScale * 0.9, aAboutDust * uAboutMix);
                     gl_PointSize = mix(linkedinPointSize, basePointSize * 0.6, hiddenMix);
                     gl_Position = projectionMatrix * mvPos;
                     vec2 ndc = gl_Position.xy / max(gl_Position.w, 0.0001);
@@ -780,7 +1604,15 @@
                     float colorWave = (sin(uTime * aColorMotion.z + aColorMotion.y) * 0.5 + 0.5);
                     float breathing = pow(smoothstep(0.08, 0.98, colorWave), 1.15) * aColorMotion.x * uColorBreathStrength * (1.0 - uLinkedinMix);
                     vec3 silverColor = mix(vec3(0.9, 0.92, 0.95), vec3(0.52, 0.56, 0.62), aColorMotion.w * 0.82);
-                    vColor = mix(color, silverColor, breathing);
+                    float portraitTwinkle = smoothstep(0.94, 0.9992, sin(uTime * (0.46 + aMotion.z * 0.62) + aMotion.x * 2.4 + aMotion.y * 1.1) * 0.5 + 0.5) * (1.0 - aAboutDust) * uAboutMix;
+                    float portraitSpark = smoothstep(0.982, 0.99985, sin(uTime * (0.78 + aMotion.z * 0.95) + aMotion.x * 3.8 + aMotion.y * 2.0) * 0.5 + 0.5) * (1.0 - aAboutDust) * uAboutMix;
+                    float langTwinkle = smoothstep(0.958, 0.9994, sin(uTime * (0.34 + aMotion.z * 0.42) + aMotion.x * 1.7 + aMotion.y * 0.8) * 0.5 + 0.5) * uLangMix;
+                    float langSpark = smoothstep(0.989, 0.99992, sin(uTime * (0.58 + aMotion.z * 0.6) + aMotion.x * 3.1 + aMotion.y * 1.4) * 0.5 + 0.5) * uLangMix;
+                    float dustTwinkle = smoothstep(0.82, 0.995, sin(uTime * (0.6 + aMotion.z * 0.8) + aMotion.x * 2.4 + aMotion.y) * 0.5 + 0.5) * aAboutDust;
+                    float totalTwinkle = max(max(dustTwinkle * 0.58, portraitTwinkle * 0.2 + portraitSpark * 0.46), langTwinkle * 0.18 + langSpark * 0.52);
+                    vColor = mix(mix(color, silverColor, breathing), vec3(1.0), totalTwinkle);
+                    vAboutMask = step(0.48, aColorMotion.w);
+                    vAboutDust = aAboutDust;
                     vAlpha = mix(mix(0.93, 0.97, linkedinNodeMix), 0.56, hiddenMix) * uSceneOpacity * vAboutFade;
                     vLinkedinNodeMix = linkedinNodeMix;
                     vHiddenMix = hiddenMix;
@@ -794,6 +1626,8 @@
                 varying float vHiddenMix;
                 varying float vOverlaySuppress;
                 varying float vAboutFade;
+                varying float vAboutMask;
+                varying float vAboutDust;
                 void main() {
                     vec2 centered = gl_PointCoord - vec2(0.5);
                     float dist = length(centered);
@@ -804,7 +1638,9 @@
                     vec3 litColor = mix(vColor, vec3(1.0), sparkle * 0.48 * (1.0 - vLinkedinNodeMix * 0.4));
                     if (dist > 0.5) discard;
                     if (vHiddenMix > 0.001) gl_FragDepth = gl_FragCoord.z + 0.0008;
-                    gl_FragColor = vec4(litColor, vAlpha * alpha * (1.0 - vOverlaySuppress) * vAboutFade);
+                    float aboutDensityAlpha = mix(1.0, vAboutMask, 0.45);
+                    float dustAlpha = mix(1.0, 0.72, vAboutDust);
+                    gl_FragColor = vec4(litColor, vAlpha * alpha * dustAlpha * (1.0 - vOverlaySuppress) * vAboutFade * aboutDensityAlpha);
                 }
             `
         });
@@ -887,6 +1723,7 @@
         particleRig.add(contactCursor);
         particleRig.position.y = -1.9;
         scene.add(particleRig);
+        setLoadingProgressTarget(0.64);
         points.renderOrder = 10;
         linkedinGlowLines.renderOrder = 997;
         linkedinLines.renderOrder = 998;
@@ -924,9 +1761,49 @@
         }
 
         const transitionTo = name => {
+            if (activeLanguageMorphShape === name) return;
             if (name === currentShape || !precomputedShapes[name]) return;
+            const isLanguageShape = shape => shape === 'en' || shape === 'zhHans' || shape === 'zhHant';
+            const isLanguageSwitch =
+                isLanguageShape(currentShape) &&
+                isLanguageShape(name) &&
+                material.uniforms.uProgress.value > 0.04;
+
+            if (isLanguageSwitch) {
+                const morphMix = material.uniforms.uShapeMorph.value;
+                const targetArray = geometry.attributes.aTarget.array;
+                const morphArray = geometry.attributes.aMorphTarget.array;
+                for (let i = 0; i < targetArray.length; i++) {
+                    targetArray[i] += (morphArray[i] - targetArray[i]) * morphMix;
+                }
+                geometry.attributes.aTarget.needsUpdate = true;
+                material.uniforms.uShapeMorph.value = 0;
+                morphArray.set(precomputedShapes[name]);
+                geometry.attributes.aMorphTarget.needsUpdate = true;
+                activeLanguageMorphShape = name;
+                if (name !== 'en' || currentShape === 'en') {
+                    currentShape = name;
+                }
+                return;
+            }
+
             geometry.attributes.aTarget.array.set(precomputedShapes[name]);
+            geometry.attributes.aMorphTarget.array.set(precomputedShapes[name]);
             geometry.attributes.aTarget.needsUpdate = true;
+            geometry.attributes.aMorphTarget.needsUpdate = true;
+            activeLanguageMorphShape = null;
+            material.uniforms.uShapeMorph.value = 0;
+            currentShape = name;
+        };
+
+        const forceShapeTarget = name => {
+            if (!geometry || !precomputedShapes[name]) return;
+            geometry.attributes.aTarget.array.set(precomputedShapes[name]);
+            geometry.attributes.aMorphTarget.array.set(precomputedShapes[name]);
+            geometry.attributes.aTarget.needsUpdate = true;
+            geometry.attributes.aMorphTarget.needsUpdate = true;
+            activeLanguageMorphShape = null;
+            material.uniforms.uShapeMorph.value = 0;
             currentShape = name;
         };
 
@@ -1120,12 +1997,70 @@
             }
         };
 
+        const setMobileMenuOpen = isOpen => {
+            document.body.dataset.mobileMenu = isOpen ? 'open' : 'closed';
+
+            if (!navMenuToggle) return;
+            navMenuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            navMenuToggle.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+        };
+
+        const closeMobileMenu = () => {
+            if (document.body.dataset.mobileMenu === 'open') setMobileMenuOpen(false);
+        };
+
+        setMobileMenuOpen(false);
+
+        if (navMenuToggle) {
+            navMenuToggle.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                markInteraction(event);
+                setMobileMenuOpen(document.body.dataset.mobileMenu !== 'open');
+            });
+        }
+
+        [navHomeLink, navMobileHomeLink].filter(Boolean).forEach(link => {
+            link.addEventListener('click', event => {
+                event.preventDefault();
+                markInteraction(event);
+                closeMobileMenu();
+                smoothScrollToAnchor(0, 140);
+            });
+        });
+
+        document.querySelectorAll('.navbar a, .nav-lang-option').forEach(navItem => {
+            navItem.addEventListener('click', () => {
+                if (adaptiveContext.viewport === 'mobile') closeMobileMenu();
+            });
+        });
+
+        document.addEventListener('click', event => {
+            if (adaptiveContext.viewport !== 'mobile') return;
+            if (document.body.dataset.mobileMenu !== 'open') return;
+            if (event.target.closest('.navbar')) return;
+            closeMobileMenu();
+        });
+
         // 交互监听
         document.addEventListener('mousemove', e => markInteraction(e));
         document.addEventListener('mousedown', e => markInteraction(e));
         document.addEventListener('touchstart', () => markInteraction(), { passive: true });
-        document.addEventListener('keydown', () => markInteraction());
+        document.addEventListener('keydown', event => {
+            markInteraction();
+            if (event.key === 'Escape') closeMobileMenu();
+            handlePageKeyNavigation(event);
+        });
+        if (navAboutLink) {
+            navAboutLink.addEventListener('click', event => {
+                event.preventDefault();
+                markInteraction(event);
+                smoothScrollToAnchor(getAboutSnapY(), 140);
+            });
+        }
         document.addEventListener('wheel', () => markInteraction(), { passive: true });
+        window.addEventListener('scroll', scheduleMagnetSnap, { passive: true });
+        window.addEventListener('touchend', scheduleMagnetSnap, { passive: true });
         document.addEventListener('mouseleave', () => isInside = false);
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
@@ -1134,10 +2069,31 @@
             }
             markInteraction();
         });
-        window.addEventListener('resize', () => {
+        const syncAdaptiveRuntime = () => {
             updateAdaptiveContext();
             updateZones();
-            buildAboutAsciiPlaceholder();
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, adaptiveContext.dprCap));
+            material.uniforms.uColorBreathStrength.value = adaptiveContext.heavyMotion ? 1 : (adaptiveContext.quality === 'medium' ? 0.45 : 0);
+        };
+
+        const bindAdaptiveQuery = query => {
+            if (query.addEventListener) {
+                query.addEventListener('change', syncAdaptiveRuntime);
+                return;
+            }
+
+            if (query.addListener) query.addListener(syncAdaptiveRuntime);
+        };
+
+        bindAdaptiveQuery(motionPreferenceQuery);
+        bindAdaptiveQuery(touchInputQuery);
+
+        window.addEventListener('resize', () => {
+            syncAdaptiveRuntime();
+            if (adaptiveContext.viewport !== 'mobile') closeMobileMenu();
+            aboutShapeReady = false;
+            refreshLanguageShapes(true);
+            if (currentShape === 'about') refreshAboutShape();
             renderer.setSize(window.innerWidth, window.innerHeight);
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -1146,7 +2102,9 @@
                 precomputedShapes.en = getEarthPoints(earthMapImage);
                 if (currentShape === 'en' || hoveredShape === 'en') {
                     geometry.attributes.aTarget.array.set(precomputedShapes.en);
+                    geometry.attributes.aMorphTarget.array.set(precomputedShapes.en);
                     geometry.attributes.aTarget.needsUpdate = true;
+                    geometry.attributes.aMorphTarget.needsUpdate = true;
                 }
             }
         });
@@ -1154,8 +2112,9 @@
         const clock = new THREE.Clock();
         const tick = () => {
             rafId = requestAnimationFrame(tick);
+            const now = performance.now();
 
-            if (performance.now() - lastInteractionAt >= inactivitySleepMs) {
+            if (now - lastInteractionAt >= inactivitySleepMs) {
                 sleepPending = true;
             }
 
@@ -1185,28 +2144,44 @@
 
             delayedPos.x += (mouse.x - delayedPos.x) * lerpFactor;
             delayedPos.y += (mouse.y - delayedPos.y) * lerpFactor;
-            cursorEl.style.transform = `translate3d(${delayedPos.x}px, ${delayedPos.y}px, 0) translate(-50%, -50%)`;
             cursorEl.style.opacity = isInside ? '1' : '0';
             cursorEl.style.visibility = isInside ? 'visible' : 'hidden';
+            refreshLanguageShapes();
+            const aboutSnapY = getAboutSnapY();
+            const currentScrollY = window.scrollY;
+            const pageIntent = currentScrollY >= aboutSnapY * 0.5 ? 'about' : 'grid';
+            const navInteractive = pageIntent === 'grid';
+            const hoverEffectsEnabled = navInteractive && adaptiveContext.supportsHover;
+            document.body.dataset.navInteractive = navInteractive ? 'true' : 'false';
+            const hoverX = isInside ? mouse.x : -10000;
+            const hoverY = isInside ? mouse.y : -10000;
+            const navEnItem = document.querySelector('.nav-en');
+            const langDropdownOpen = !!navEnItem && (navEnItem.matches(':hover') || navEnItem.matches(':focus-within'));
 
             let hit = false;
             let isContactHovered = false;
             let isShotHovered = false;
             let isComingSoonHovered = false;
-            let isAboutHovered = false;
             let activeLightTarget = null;
             hoveredShape = 'grid';
             hitZones.forEach(z => {
-                if (delayedPos.x > z.left && delayedPos.x < z.right && delayedPos.y > z.top && delayedPos.y < z.bottom) {
+                if ((z.shape === 'zhHans' || z.shape === 'zhHant') && !langDropdownOpen) {
+                    z.el.classList.remove('is-active');
+                    return;
+                }
+                if (hoverEffectsEnabled && hoverX > z.left && hoverX < z.right && hoverY > z.top && hoverY < z.bottom) {
                     hit = true;
-                    activeLightTarget = {
-                        x: ((z.left + z.right) * 0.5 / window.innerWidth) * 100,
-                        y: ((z.top + z.bottom) * 0.5 / window.innerHeight) * 100
-                    };
+                    const targetCenterX = (z.left + z.right) * 0.5;
+                    const targetCenterY = (z.top + z.bottom) * 0.5;
+                    if (adaptiveContext.lensFlare) {
+                        activeLightTarget = {
+                            x: (targetCenterX / window.innerWidth) * 100,
+                            y: (targetCenterY / window.innerHeight) * 100
+                        };
+                    }
                     if (z.shape === 'contact') {
                         isContactHovered = true;
                     } else if (z.shape === 'about') {
-                        isAboutHovered = true;
                     } else if (z.shape === 'snap') {
                         isShotHovered = true;
                     } else if (z.shape === 'works' || z.shape === 'gallery') {
@@ -1218,45 +2193,150 @@
                     z.el.classList.add('is-active');
                 } else { z.el.classList.remove('is-active'); }
             });
+            cursorEl.style.transform = `translate3d(${delayedPos.x}px, ${delayedPos.y}px, 0) translate(-50%, -50%) scale(${hit ? 1.45 : 1})`;
 
-            const targetBgLightX = activeLightTarget ? activeLightTarget.x : 35;
-            const targetBgLightY = activeLightTarget ? Math.max(6, activeLightTarget.y - 4.5) : 12;
+            const sourceRect = navHomeLink ? navHomeLink.getBoundingClientRect() : null;
+            const sourcePxX = sourceRect ? (sourceRect.left + sourceRect.right) * 0.5 : window.innerWidth * 0.5;
+            const sourceLift = Math.min(380, Math.max(260, window.innerHeight * 0.32));
+            const sourcePxY = sourceRect ? sourceRect.top - sourceLift : -sourceLift;
+            const sourceLightX = (sourcePxX / window.innerWidth) * 100;
+            const sourceLightY = (sourcePxY / window.innerHeight) * 100;
+            const targetBgLightX = activeLightTarget ? activeLightTarget.x : sourceLightX;
+            const targetBgLightY = activeLightTarget ? activeLightTarget.y : sourceLightY;
             bgLightPos.x = THREE.MathUtils.lerp(bgLightPos.x, targetBgLightX, activeLightTarget ? 0.11 : 0.045);
             bgLightPos.y = THREE.MathUtils.lerp(bgLightPos.y, targetBgLightY, activeLightTarget ? 0.11 : 0.045);
-            document.body.style.setProperty('--bg-light-x', `${bgLightPos.x.toFixed(2)}%`);
-            document.body.style.setProperty('--bg-light-y', `${bgLightPos.y.toFixed(2)}%`);
+            const navLightTarget = activeLightTarget ? 1 : 0;
+            navLightIntensity = THREE.MathUtils.lerp(
+                navLightIntensity,
+                navLightTarget,
+                navLightTarget > navLightIntensity ? 0.14 : 0.09
+            );
+            const targetPxX = (bgLightPos.x / 100) * window.innerWidth;
+            const targetPxY = (bgLightPos.y / 100) * window.innerHeight;
+            const lensAimY = targetPxY + window.innerHeight * 0.48;
+            const lightDx = targetPxX - sourcePxX;
+            const lightDy = lensAimY - sourcePxY;
+            const lightDistance = Math.hypot(lightDx, lightDy);
+            const lightUnitX = lightDistance > 0.1 ? lightDx / lightDistance : 0;
+            const lightUnitY = lightDistance > 0.1 ? lightDy / lightDistance : 1;
+            const ghostTravel = Math.min(window.innerHeight * 1.05, Math.max(420, lightDistance * 0.88));
+            const ghostA = { x: sourcePxX + lightUnitX * ghostTravel * 0.36, y: sourcePxY + lightUnitY * ghostTravel * 0.36 };
+            const ghostB = { x: sourcePxX + lightUnitX * ghostTravel * 0.68, y: sourcePxY + lightUnitY * ghostTravel * 0.68 };
+            const ghostC = { x: sourcePxX + lightUnitX * ghostTravel * 1.04, y: sourcePxY + lightUnitY * ghostTravel * 1.04 };
+            const ghostD = { x: sourcePxX + lightUnitX * ghostTravel * 1.34, y: sourcePxY + lightUnitY * ghostTravel * 1.34 };
+            const ring = { x: sourcePxX + lightUnitX * ghostTravel * 0.96, y: sourcePxY + lightUnitY * ghostTravel * 0.96 };
+            const spark = { x: sourcePxX + lightUnitX * ghostTravel * 0.58, y: sourcePxY + lightUnitY * ghostTravel * 0.58 };
+            const rayAngle = lightDistance > 0.1 ? Math.atan2(lightDy, lightDx) * 180 / Math.PI : 0;
+
+            document.body.style.setProperty('--nav-source-x', `${sourcePxX.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-source-y', `${sourcePxY.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ghost-a-x', `${ghostA.x.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ghost-a-y', `${ghostA.y.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ghost-b-x', `${ghostB.x.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ghost-b-y', `${ghostB.y.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ghost-c-x', `${ghostC.x.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ghost-c-y', `${ghostC.y.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ghost-d-x', `${ghostD.x.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ghost-d-y', `${ghostD.y.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ring-x', `${ring.x.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-ring-y', `${ring.y.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-spark-x', `${spark.x.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-spark-y', `${spark.y.toFixed(1)}px`);
+            document.body.style.setProperty('--nav-light-opacity', (navLightIntensity * sceneVisibility).toFixed(3));
+            document.body.style.setProperty('--nav-light-scale', (0.98 + navLightIntensity * 0.04).toFixed(3));
+            document.body.style.setProperty('--nav-light-angle', `${rayAngle.toFixed(2)}deg`);
+            const shapeIntent = hoveredShape === 'grid' ? pageIntent : hoveredShape;
+            const isAboutSnapSettled = hoveredShape === 'grid' && pageIntent === 'about' && Math.abs(currentScrollY - aboutSnapY) < 6;
+            const isHomeSnapSettled = hoveredShape === 'grid' && pageIntent === 'grid' && Math.abs(currentScrollY) < 6;
+            if (shapeIntent === 'about' && !aboutShapeReady) refreshAboutShape();
+            if (shapeIntent === 'about') transitionTo('about');
 
             material.uniforms.uTime.value = elapsed;
-            const targetProg = (hoveredShape === 'grid') ? 0 : 1;
-            const progressSpeed = (targetProg === 1) ? hoverInProgressSpeed : hoverOutProgressSpeed;
+            const targetProg = (shapeIntent === 'grid') ? 0 : 1;
+            const progressSpeed = hoveredShape === 'grid'
+                ? (targetProg === 1 ? 0.054 : 0.048)
+                : ((targetProg === 1) ? hoverInProgressSpeed : hoverOutProgressSpeed);
             material.uniforms.uProgress.value += (targetProg - material.uniforms.uProgress.value) * progressSpeed;
-            const linkedinTargetVisibility = (hoveredShape === 'linkedin') ? 1 : 0;
+            if (isAboutSnapSettled && material.uniforms.uProgress.value > 0.9985) {
+                forceShapeTarget('about');
+                material.uniforms.uProgress.value = 1;
+            } else if (isHomeSnapSettled && material.uniforms.uProgress.value < 0.0015) {
+                forceShapeTarget('grid');
+                material.uniforms.uProgress.value = 0;
+            }
+            const shapeMorphTarget = activeLanguageMorphShape ? 1 : 0;
+            material.uniforms.uShapeMorph.value = THREE.MathUtils.lerp(
+                material.uniforms.uShapeMorph.value,
+                shapeMorphTarget,
+                shapeMorphTarget > material.uniforms.uShapeMorph.value ? 0.105 : 0.085
+            );
+            if (activeLanguageMorphShape && material.uniforms.uShapeMorph.value > 0.998) {
+                const completedLanguageShape = activeLanguageMorphShape;
+                geometry.attributes.aTarget.array.set(geometry.attributes.aMorphTarget.array);
+                geometry.attributes.aTarget.needsUpdate = true;
+                currentShape = completedLanguageShape;
+                activeLanguageMorphShape = null;
+                material.uniforms.uShapeMorph.value = 0;
+            }
+            const linkedinTargetVisibility = (shapeIntent === 'linkedin') ? 1 : 0;
             linkedinNetworkVisibility += (linkedinTargetVisibility - linkedinNetworkVisibility) * 0.09;
             material.uniforms.uLinkedinMix.value = linkedinNetworkVisibility;
-            const motionShape = (hoveredShape === 'grid') ? 'grid' : currentShape;
+            const isReleasingHome = shapeIntent === 'grid' && currentShape === 'home' && material.uniforms.uProgress.value > 0.08;
+            const motionShape = isReleasingHome ? 'home' : ((shapeIntent === 'grid') ? 'grid' : currentShape);
+            const homeBlend = currentShape === 'home' ? material.uniforms.uProgress.value : 0;
+            const gridWaveBlend = shapeIntent === 'grid'
+                ? 1 - homeBlend
+                : (motionShape === 'grid' ? 1 : 0);
+            if (shapeIntent === 'grid' && currentShape === 'home' && material.uniforms.uProgress.value < 0.002) {
+                currentShape = 'grid';
+            }
+            if (shapeIntent === 'grid' && currentShape === 'about' && material.uniforms.uProgress.value < 0.002) {
+                currentShape = 'grid';
+            }
+            if (shapeIntent === 'grid' && (currentShape === 'zhHans' || currentShape === 'zhHant' || currentShape === 'en') && material.uniforms.uProgress.value < 0.002) {
+                currentShape = 'grid';
+                activeLanguageMorphShape = null;
+                material.uniforms.uShapeMorph.value = 0;
+            }
             material.uniforms.uAboutMix.value = THREE.MathUtils.lerp(
                 material.uniforms.uAboutMix.value,
                 motionShape === 'about' ? 1 : 0,
                 motionShape === 'about' ? 0.1 : 0.08
             );
+            const motionScale = adaptiveContext.particleMotion ? 1 : 0.28;
+            const aboutMotionTarget = motionShape === 'about' ? motionScale : 0;
+            material.uniforms.uAboutMotionStrength.value = THREE.MathUtils.lerp(
+                material.uniforms.uAboutMotionStrength.value,
+                aboutMotionTarget,
+                aboutMotionTarget > material.uniforms.uAboutMotionStrength.value
+                    ? 0.12
+                    : 0.08
+            );
+            const langMixTarget = (motionShape === 'zhHans' || motionShape === 'zhHant') ? motionScale : 0;
+            material.uniforms.uLangMix.value = THREE.MathUtils.lerp(
+                material.uniforms.uLangMix.value,
+                langMixTarget,
+                langMixTarget > material.uniforms.uLangMix.value ? 0.14 : 0.08
+            );
             if (motionShape !== 'linkedin') {
                 const aboutColorMix = material.uniforms.uAboutMix.value;
-                for (let i = 0; i < PARTICLE_COUNT; i++) {
-                    const idx = i * 3;
-                    pointColors[idx] = THREE.MathUtils.lerp(basePointColors[idx], aboutPointColors[idx], aboutColorMix);
-                    pointColors[idx + 1] = THREE.MathUtils.lerp(basePointColors[idx + 1], aboutPointColors[idx + 1], aboutColorMix);
-                    pointColors[idx + 2] = THREE.MathUtils.lerp(basePointColors[idx + 2], aboutPointColors[idx + 2], aboutColorMix);
+                if (Math.abs(aboutColorMix - lastAboutColorMix) > 0.018) {
+                    for (let i = 0; i < PARTICLE_COUNT; i++) {
+                        const idx = i * 3;
+                        pointColors[idx] = THREE.MathUtils.lerp(basePointColors[idx], aboutPointColors[idx], aboutColorMix);
+                        pointColors[idx + 1] = THREE.MathUtils.lerp(basePointColors[idx + 1], aboutPointColors[idx + 1], aboutColorMix);
+                        pointColors[idx + 2] = THREE.MathUtils.lerp(basePointColors[idx + 2], aboutPointColors[idx + 2], aboutColorMix);
+                    }
+                    geometry.attributes.color.needsUpdate = true;
+                    lastAboutColorMix = aboutColorMix;
                 }
-                geometry.attributes.color.needsUpdate = true;
             }
-            material.uniforms.uWaveStrength.value = motionShape === 'grid' ? 1 : 0;
-            material.uniforms.uHomeMotionStrength.value = motionShape === 'home' ? 1 : 0;
+            material.uniforms.uWaveStrength.value = gridWaveBlend * motionScale;
+            material.uniforms.uHomeMotionStrength.value = homeBlend * motionScale;
             contactEmailEl.style.opacity = (isContactHovered && !isComingSoonHovered) ? '1' : '0';
             comingSoonAlpha = THREE.MathUtils.lerp(comingSoonAlpha, isComingSoonHovered ? 1 : 0, isComingSoonHovered ? 0.14 : 0.08);
-            aboutAsciiAlpha = THREE.MathUtils.lerp(aboutAsciiAlpha, isAboutHovered ? 1 : 0, isAboutHovered ? 0.12 : 0.08);
             comingSoonEl.style.opacity = comingSoonAlpha.toFixed(3);
             comingSoonEl.style.transform = `translate(-50%, calc(-50% + ${(1 - comingSoonAlpha) * 10}px))`;
-            aboutAsciiEl.style.opacity = '0';
             canvas.style.opacity = (sceneVisibility * (1 - comingSoonAlpha)).toFixed(3);
             const isCenteredHoverView = isContactHovered || isShotHovered;
             material.uniforms.uCenteredViewMix.value = THREE.MathUtils.lerp(
@@ -1290,7 +2370,7 @@
             }
             const slotOpen = shotActive ? THREE.MathUtils.clamp((shotElapsed - 0.08) / 0.18, 0, 1) : 0;
             const printStartDelay = 0.31;
-            const printProgress = shotActive ? THREE.MathUtils.clamp((shotElapsed - printStartDelay) / 0.7, 0, 1) : 0;
+            const printProgress = shotActive ? THREE.MathUtils.clamp((shotElapsed - printStartDelay) / 0.5, 0, 1) : 0;
             const slotLift = slotOpen * 3.5;
             const printHeight = shotPrintEl.offsetHeight || 278;
             const slotHeight = 8;
@@ -1314,8 +2394,6 @@
             document.body.style.setProperty('--flash-dim', Math.min(0.52, flashStrength * 0.52).toFixed(3));
             shotSlotEl.style.opacity = (slotOpen * 0.95).toFixed(3);
             shotSlotEl.style.transform = `translate(-50%, calc(-50% - ${slotLift}px)) scaleY(${0.12 + slotOpen * 0.88})`;
-            shotSlotLipEl.style.opacity = (slotOpen * 0.98).toFixed(3);
-            shotSlotLipEl.style.transform = `translate(-50%, calc(-100% - ${slotLift + 2.5}px)) scaleY(${0.12 + slotOpen * 0.88})`;
             shotPrintEl.style.opacity = (canRevealPrint && printProgress > printRevealThreshold) ? '0.98' : '0';
             shotPrintEl.style.transform = `translate(-50%, calc(${initialPrintOffset + ejectedOffset}px))`;
             shotPrintEl.style.clipPath = (shotActive && canRevealPrint && printProgress > printRevealThreshold)
@@ -1327,14 +2405,24 @@
             const currentSpeed = (motionShape === 'en') ? earthRotationSpeed : baseRotationSpeed;
             const isLeavingHome = previousMotionShape === 'home' && motionShape === 'grid';
 
-            if (motionShape !== 'linkedin' && motionShape !== 'about' && motionShape !== 'home') {
+            const isFrontFacingTextShape = motionShape === 'zhHans' || motionShape === 'zhHant';
+            const wasFrontFacingTextShape = previousMotionShape === 'zhHans' || previousMotionShape === 'zhHant';
+            const isEarthTextTransition =
+                (previousMotionShape === 'en' && isFrontFacingTextShape) ||
+                (wasFrontFacingTextShape && motionShape === 'en');
+
+            if (isEarthTextTransition) {
+                totalRotation = normalizeAngle(particleRig.rotation.y);
+            }
+
+            if (motionShape !== 'linkedin' && motionShape !== 'about' && motionShape !== 'home' && !isFrontFacingTextShape) {
                 totalRotation = normalizeAngle(totalRotation + delta * currentSpeed);
             } else if (motionShape === 'home') {
                 totalRotation = normalizeAngle(particleRig.rotation.y);
             }
             
             let targetRot;
-            if (motionShape === 'linkedin' || motionShape === 'contact' || motionShape === 'about') {
+            if (motionShape === 'linkedin' || motionShape === 'contact' || isFrontFacingTextShape) {
                 targetRot = 0;
             } else if (motionShape === 'home') {
                 targetRot = 0;
@@ -1373,9 +2461,12 @@
             );
             contactCursor.visible = contactCursor.material.opacity > 0.01;
 
+            const aboutViewMix = material.uniforms.uAboutMix.value;
             const targetCameraFov = isCenteredHoverView ? 60 : 75;
             const targetCameraZ = isCenteredHoverView ? 17.2 : 20;
-            const targetCameraY = -1.9;
+            const targetCameraY = isCenteredHoverView
+                ? -1.9
+                : THREE.MathUtils.lerp(-1.9, -2.85, aboutViewMix);
             camera.fov = THREE.MathUtils.lerp(camera.fov, targetCameraFov, isCenteredHoverView ? 0.06 : 0.08);
             camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetCameraY, isCenteredHoverView ? 0.08 : 0.065);
             camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetCameraZ, isCenteredHoverView ? 0.06 : 0.08);
@@ -1383,7 +2474,7 @@
 
             const heroScrollRange = Math.max(window.innerHeight * 0.9, 1);
             const heroScrollProgress = THREE.MathUtils.clamp(window.scrollY / heroScrollRange, 0, 1);
-            const scrollLift = -heroScrollProgress * 5.4;
+            const scrollLift = -heroScrollProgress * 7.2;
 
             const targetRotX = hoveredShape === 'linkedin'
                 ? Math.PI / 2
@@ -1393,37 +2484,87 @@
                 targetRotX,
                 hoveredShape === 'linkedin' ? 0.12 : 0.045
             );
+            const targetRigY = isCenteredHoverView
+                ? -4.4
+                : motionShape === 'about'
+                    ? THREE.MathUtils.lerp(-1.9, -2.35, aboutViewMix)
+                    : -1.9 + scrollLift;
             particleRig.position.y = THREE.MathUtils.lerp(
                 particleRig.position.y,
-                (isCenteredHoverView ? -4.4 : -1.9) + scrollLift,
+                targetRigY,
                 isCenteredHoverView ? 0.08 : 0.065
             );
-            particleRig.rotation.y = lerpAngle(
-                particleRig.rotation.y,
-                targetRot,
-                motionShape === 'grid' ? (isLeavingHome ? 0.18 : 0.05) : 0.1
-            );
+            if (isAboutSnapSettled) {
+                particleRig.rotation.y = 0;
+                totalRotation = 0;
+            } else {
+                const rotationLerp = isFrontFacingTextShape
+                    ? 0.14
+                    : (motionShape === 'grid' ? (isLeavingHome ? 0.18 : 0.05) : 0.1);
+                particleRig.rotation.y = lerpAngle(
+                    particleRig.rotation.y,
+                    targetRot,
+                    rotationLerp
+                );
+                if (isFrontFacingTextShape && Math.abs(normalizeAngle(particleRig.rotation.y)) < 0.003) {
+                    particleRig.rotation.y = 0;
+                    totalRotation = 0;
+                }
+            }
             previousMotionShape = motionShape;
             renderer.render(scene, camera);
+            if (!initialFrameRendered) {
+                initialFrameRendered = true;
+                setLoadingProgressTarget(0.74);
+                if (resolveInitialFrameReady) resolveInitialFrameReady();
+            }
         };
 
         const updateZones = () => {
-            hitZones = Array.from(navLinks).map(a => {
-                const rect = a.getBoundingClientRect();
-                let shape = 'grid';
-                if(a.parentElement.classList.contains('nav-about')) shape = 'grid';
-                if(a.parentElement.classList.contains('nav-home')) shape = 'home';
-                if(a.parentElement.classList.contains('nav-snap')) shape = 'snap';
-                if(a.parentElement.classList.contains('nav-contact')) shape = 'contact';
-                if(a.parentElement.classList.contains('nav-works')) shape = 'works';
-                if(a.parentElement.classList.contains('nav-gallery')) shape = 'gallery';
-                if(a.parentElement.classList.contains('nav-linkedin')) shape = 'linkedin';
-                if(a.parentElement.classList.contains('nav-en')) shape = 'en';
-                return { el: a.querySelector('.nav-inner'), shape, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+            const navZones = Array.from(navLinks)
+                .filter(a => !a.parentElement.classList.contains('nav-spacing'))
+                .map(a => {
+                    const rect = a.getBoundingClientRect();
+                    let shape = 'grid';
+                    if(a.parentElement.classList.contains('nav-about')) shape = 'about';
+                    if(a.parentElement.classList.contains('nav-home')) shape = 'home';
+                    if(a.parentElement.classList.contains('nav-snap')) shape = 'snap';
+                    if(a.parentElement.classList.contains('nav-contact')) shape = 'contact';
+                    if(a.parentElement.classList.contains('nav-works')) shape = 'works';
+                    if(a.parentElement.classList.contains('nav-gallery')) shape = 'gallery';
+                    if(a.parentElement.classList.contains('nav-linkedin')) shape = 'linkedin';
+                    if(a.parentElement.classList.contains('nav-en')) shape = 'en';
+                    const expandX = shape === 'home' ? 18 : 0;
+                    return {
+                        el: a.querySelector('.nav-inner'),
+                        shape,
+                        left: rect.left - expandX,
+                        right: rect.right + expandX,
+                        top: rect.top,
+                        bottom: rect.bottom
+                    };
+                });
+
+            const langZones = Array.from(navLangOptions).map((button, index) => {
+                const rect = button.getBoundingClientRect();
+                return {
+                    el: button,
+                    shape: button.dataset.shape || 'en',
+                    left: rect.left,
+                    right: rect.right,
+                    top: rect.top - (index === 0 ? 16 : 4),
+                    bottom: rect.bottom + 4
+                };
             });
+
+            hitZones = [...navZones, ...langZones];
         };
 
-        updateZones(); tick();
+        updateZones();
+        tick();
+        Promise.all([worldMapReady, aboutPortraitReady, initialFrameReady, minimumLoadingReady])
+            .then(finishLoadingScreen);
+            })();
         }
     </script>
 </body>

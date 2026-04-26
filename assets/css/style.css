@@ -385,6 +385,10 @@ html, body, a, button { cursor: auto !important; }
     pointer-events: none;
 }
 
+.mobile-hero-copy {
+    display: none;
+}
+
 .about-screen {
     min-height: 100svh;
     display: grid;
@@ -420,6 +424,10 @@ html, body, a, button { cursor: auto !important; }
     text-wrap: nowrap;
 }
 
+.about-intro-line {
+    display: block;
+}
+
 .about-role {
     max-width: none;
     margin-top: 0;
@@ -429,6 +437,47 @@ html, body, a, button { cursor: auto !important; }
     letter-spacing: -0.015em;
     color: rgba(238, 242, 247, 0.94);
     text-wrap: nowrap;
+}
+
+.nyu-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.18em;
+    padding: 0 0.03em;
+    border-radius: 0.08em;
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: -0.025em;
+    cursor: pointer !important;
+    transition:
+        color 0.18s ease,
+        opacity 0.18s ease,
+        background-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.nyu-link:hover,
+.nyu-link:focus-visible {
+    color: #fff;
+    background: rgba(87, 6, 140, 0.22);
+    box-shadow: 0 0 0 0.08em rgba(87, 6, 140, 0.28);
+    opacity: 1;
+    outline: none;
+}
+
+.nyu-word {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+}
+
+.nyu-logo {
+    width: 0.86em;
+    height: 0.86em;
+    color: #57068c;
+    flex: 0 0 auto;
+    transform: translateY(0.005em);
 }
 
 .about-disciplines {
@@ -854,7 +903,8 @@ body[data-mode="maintenance"] .maintenance-screen {
 .navbar { position: relative; top: 5px; width: 100%; z-index: 1000; }
 
 .nav-mobile-home,
-.nav-menu-toggle {
+.nav-menu-toggle,
+.navbar li.nav-instagram {
     display: none;
 }
 
@@ -892,6 +942,8 @@ body[data-mode="maintenance"] .maintenance-screen {
 .navbar li.nav-contact a *,
 .navbar li.nav-linkedin a,
 .navbar li.nav-linkedin a * ,
+.navbar li.nav-instagram a,
+.navbar li.nav-instagram a *,
 .navbar li.nav-en a,
 .navbar li.nav-en a *,
 .nav-lang-option { cursor: pointer !important; }
@@ -960,6 +1012,7 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
 /* 矢量图标尺寸与颜色 */
 .nav-icon { height: 42px; width: 42px; display: block; color: inherit; }
 .nav-linkedin-icon { height: 18px; display: block; color: inherit; }
+.nav-instagram-icon { height: 18px; display: block; color: inherit; }
 
 /* 导航文字动画基础 */
 .nav-inner {
@@ -994,14 +1047,25 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
         display: none !important;
     }
 
+    #webgl-canvas {
+        display: none;
+    }
+
     .hero-screen {
-        min-height: 116svh;
+        min-height: 0;
+        height: 0;
+        overflow: hidden;
+        padding: 0;
+    }
+
+    .mobile-hero-copy {
+        display: none;
     }
 
     .about-screen {
         min-height: 100svh;
-        margin-top: -10svh;
-        padding: var(--about-padding-start) var(--layout-gutter) var(--about-padding-end);
+        margin-top: 0;
+        padding: calc(clamp(228px, 42svh, 372px) + env(safe-area-inset-top)) var(--layout-gutter) var(--about-padding-end);
         border-radius: 0;
     }
 
@@ -1013,34 +1077,53 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
     }
 
     .about-grid-main {
-        gap: 10px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 30px 30px;
+        column-gap: 0;
+        row-gap: 0;
         max-width: 100%;
     }
 
     .about-intro {
-        font-size: clamp(24px, 7.1vw, 32px);
-        line-height: 1.08;
-        letter-spacing: -0.012em;
-        text-wrap: balance;
+        grid-column: 1 / -1;
+        max-width: none;
+        margin: 0 0 16px;
+        font-size: clamp(28px, 7.4vw, 38px);
+        font-weight: 700;
+        line-height: 0.98;
+        letter-spacing: -0.018em;
+        text-wrap: nowrap;
+        white-space: nowrap;
     }
 
     .about-role {
-        max-width: 13.5em;
-        font-size: clamp(22px, 6.4vw, 30px);
-        line-height: 1.12;
-        letter-spacing: -0.012em;
+        grid-column: 1 / 4;
+        max-width: 14.2em;
+        margin-top: 8px;
+        font-size: clamp(19px, 5.35vw, 25px);
+        line-height: 1.18;
+        letter-spacing: -0.01em;
         text-wrap: balance;
     }
 
+    .nyu-logo {
+        width: 0.9em;
+        height: 0.9em;
+        transform: translateY(0.01em);
+    }
+
     .about-disciplines {
-        font-size: clamp(27px, 8.4vw, 38px);
-        line-height: 1.04;
+        grid-column: 1 / -1;
+        margin-top: 8px;
+        font-size: clamp(28px, 8.1vw, 38px);
+        font-weight: 700;
+        line-height: 1.02;
         letter-spacing: -0.016em;
         text-wrap: nowrap;
     }
 
     .about-disciplines-first {
-        margin-top: clamp(72px, 16svh, 132px);
+        margin-top: clamp(128px, 22svh, 184px);
     }
 
     .about-cta {
@@ -1054,6 +1137,7 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
     }
 
     .navbar {
+        --mobile-menu-align-inset: 12px;
         position: fixed;
         top: 0;
         right: 0;
@@ -1069,7 +1153,7 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
         position: absolute;
         inset: 0 0 auto;
         height: 100svh;
-        background: rgba(7, 9, 12, 0.92);
+        background: rgba(7, 9, 12, 0.82);
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.22s ease;
@@ -1122,27 +1206,30 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
     }
 
     body[data-mobile-menu="open"] .nav-menu-toggle__line:nth-child(1) {
-        transform: translateY(7px) rotate(45deg);
+        transform: translateY(7px) rotate(42deg) scaleX(0.92);
     }
 
     body[data-mobile-menu="open"] .nav-menu-toggle__line:nth-child(2) {
-        opacity: 0;
+        opacity: 0.28;
+        transform: scaleX(0.32);
     }
 
     body[data-mobile-menu="open"] .nav-menu-toggle__line:nth-child(3) {
-        transform: translateY(-7px) rotate(-45deg);
+        width: 23px;
+        transform: translateY(-7px) rotate(-42deg) scaleX(0.92);
     }
 
     .navbar ul {
         position: relative;
         z-index: 2;
         display: grid;
+        grid-template-columns: minmax(0, 1fr) 30px 30px;
         align-items: stretch;
         width: 100%;
         max-width: none;
         min-height: 0;
         margin: 0;
-        padding: 12px 0 18px;
+        padding: 12px var(--mobile-menu-align-inset) 18px 0;
         overflow: hidden;
         opacity: 0;
         visibility: hidden;
@@ -1168,19 +1255,22 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
     .navbar li.nav-about,
     .navbar li.nav-contact,
     .navbar li.nav-linkedin,
+    .navbar li.nav-instagram,
     .navbar li.nav-en {
         display: block;
         flex: none;
         min-width: 0;
     }
 
+    .navbar li.nav-about,
     .navbar li.nav-home,
+    .navbar li.nav-en > a,
     .navbar li.nav-spacing {
         display: none;
     }
 
     .navbar li a {
-        justify-content: flex-start;
+        justify-content: flex-end;
         height: 48px;
         padding: 0;
         border-top: 1px solid rgba(238, 242, 247, 0.1);
@@ -1191,7 +1281,32 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
         touch-action: manipulation;
     }
 
-    .navbar li:first-child a {
+    .navbar li {
+        grid-column: 1 / -1;
+    }
+
+    .navbar li.nav-linkedin {
+        grid-column: 2 / 3;
+    }
+
+    .navbar li.nav-instagram {
+        grid-column: 3 / 4;
+    }
+
+    .navbar li.nav-linkedin a,
+    .navbar li.nav-instagram a {
+        justify-content: center;
+        width: 30px;
+        margin: 0;
+        border-top: 0;
+    }
+
+    .navbar li.nav-contact a {
+        border-bottom: 1px solid rgba(238, 242, 247, 0.1);
+    }
+
+    .navbar li:first-child a,
+    .navbar li.nav-works a {
         border-top: 0;
     }
 
@@ -1200,17 +1315,14 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
         height: 34px;
     }
 
-    .nav-linkedin-icon {
-        height: 18px;
-        width: 18px;
+    .nav-linkedin-icon,
+    .nav-instagram-icon {
+        height: 22px;
+        width: 22px;
     }
 
-    .nav-linkedin a::after {
-        content: "LINKEDIN";
-        margin-left: 12px;
-        font-size: 13px;
-        font-weight: 600;
-        letter-spacing: 0.1em;
+    .nav-instagram-icon {
+        transform: translateY(1.5px);
     }
 
     .nav-inner {
@@ -1226,10 +1338,11 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
     .nav-lang-dropdown {
         position: static;
         display: flex;
-        justify-content: flex-start;
+        justify-content: flex-end;
         gap: 8px;
         min-width: 0;
-        padding: 0 0 12px;
+        margin-top: 18px;
+        padding: 8px 0 12px;
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
@@ -1241,9 +1354,10 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
     }
 
     .nav-lang-option {
-        min-height: 36px;
-        padding: 10px 15px;
-        border-radius: 8px;
+        min-height: 32px;
+        padding: 8px 12px;
+        border-radius: 7px;
+        font-size: 13px;
         background: rgba(238, 242, 247, 0.06);
         box-shadow: inset 0 0 0 1px rgba(238, 242, 247, 0.12);
     }
@@ -1281,15 +1395,15 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
 
 @media (max-width: 390px) {
     .about-intro {
-        font-size: clamp(23px, 6.8vw, 29px);
+        font-size: clamp(27px, 7.2vw, 32px);
     }
 
     .about-role {
-        font-size: clamp(21px, 6vw, 27px);
+        font-size: clamp(19px, 5.6vw, 24px);
     }
 
     .about-disciplines {
-        font-size: clamp(25px, 7.9vw, 34px);
+        font-size: clamp(26px, 7.8vw, 34px);
     }
 
     .navbar li a,
@@ -1300,12 +1414,12 @@ body[data-nav-interactive="true"] .nav-en:focus-within .nav-lang-dropdown {
 }
 
 @media (max-width: 767px) and (max-height: 720px) {
-    :root {
-        --about-padding-start: 15svh;
+    .about-screen {
+        padding-top: calc(clamp(168px, 32svh, 228px) + env(safe-area-inset-top));
     }
 
     .about-disciplines-first {
-        margin-top: clamp(54px, 11svh, 96px);
+        margin-top: clamp(88px, 15svh, 124px);
     }
 }
 

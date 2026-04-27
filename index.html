@@ -106,8 +106,8 @@
             <li class="nav-en">
                 <a href="#lang" aria-haspopup="true" aria-expanded="false"><span class="nav-inner">EN</span></a>
                 <div class="nav-lang-dropdown" aria-label="Language options">
-                    <button type="button" class="nav-lang-option" data-shape="zhHans" aria-label="简体中文">简</button>
-                    <button type="button" class="nav-lang-option" data-shape="zhHant" aria-label="繁體中文">繁</button>
+                    <button type="button" class="nav-lang-option" aria-label="简体中文">简</button>
+                    <button type="button" class="nav-lang-option" aria-label="繁體中文">繁</button>
                 </div>
             </li>
         </ul>
@@ -161,7 +161,7 @@
     </script>
 
     <script type="module">
-        const MAINTENANCE_MODE = false;
+        const MAINTENANCE_MODE = true;
         const loadingScreenEl = document.getElementById('loading-screen');
         let loadingProgressTarget = 0.04;
         let loadingProgressDisplay = 0.04;
@@ -686,8 +686,6 @@
         const linkedinDustAnchors = new Uint16Array(PARTICLE_COUNT);
         const linkedinDustMotion = new Float32Array(PARTICLE_COUNT * 4);
         const linkedinDustMode = new Float32Array(PARTICLE_COUNT);
-        const HANS_FONT_STACK = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
-        const HANT_FONT_STACK = '"PingFang TC", "Hiragino Sans CNS", "Microsoft JhengHei", "Noto Sans CJK TC", sans-serif';
         let totalRotation = 0;
         let previousMotionShape = 'grid';
         let currentShape = 'grid';
@@ -718,8 +716,6 @@
         let earthMapImage = null;
         let aboutPortraitImage = null;
         let aboutShapeReady = false;
-        let currentGreetingBucket = '';
-        let activeLanguageMorphShape = null;
         let resolveWorldMapReady = null;
         let resolveAboutPortraitReady = null;
         let resolveInitialFrameReady = null;
@@ -1147,177 +1143,6 @@
             });
         };
 
-        const buildLanguageGlyphPoints = (text, fontStack) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            canvas.width = 820;
-            canvas.height = 340;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#000000';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            const fontSize = 212;
-            const tracking = 18;
-            const glyphs = Array.from(text);
-            ctx.font = `400 ${fontSize}px ${fontStack}`;
-            const widths = glyphs.map(glyph => ctx.measureText(glyph).width);
-            const totalWidth = widths.reduce((sum, width) => sum + width, 0) + tracking * (glyphs.length - 1);
-            let cursorX = canvas.width * 0.5 - totalWidth * 0.5;
-            const centerY = canvas.height * 0.56;
-
-            glyphs.forEach((glyph, index) => {
-                const width = widths[index];
-                ctx.fillText(glyph, cursorX + width * 0.5, centerY);
-                cursorX += width + tracking;
-            });
-
-            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-            const corePoints = [];
-            const fringePoints = [];
-            let minX = canvas.width;
-            let maxX = 0;
-            let minY = canvas.height;
-            let maxY = 0;
-
-            for (let y = 0; y < canvas.height; y += 3) {
-                for (let x = 0; x < canvas.width; x += 3) {
-                    const alpha = pixels[(y * canvas.width + x) * 4 + 3];
-                    if (alpha < 38) continue;
-
-                    minX = Math.min(minX, x);
-                    maxX = Math.max(maxX, x);
-                    minY = Math.min(minY, y);
-                    maxY = Math.max(maxY, y);
-
-                    if (alpha > 148) {
-                        corePoints.push({ x, y, alpha: alpha / 255 });
-                    } else {
-                        fringePoints.push({ x, y, alpha: alpha / 255 });
-                    }
-                }
-            }
-
-            const allPoints = corePoints.length ? corePoints.concat(fringePoints) : fringePoints;
-            if (!allPoints.length) {
-                return getCanvasPoints(canvas, {
-                    sampleStep: 3,
-                    alphaThreshold: 48,
-                    pointScale: 0.024,
-                    depth: 0.18
-                });
-            }
-
-            const data = new Float32Array(PARTICLE_COUNT * 3);
-            const centerX = (minX + maxX) * 0.5;
-            const centerYText = (minY + maxY) * 0.5;
-            const width = Math.max(maxX - minX, 1);
-            const height = Math.max(maxY - minY, 1);
-            const pointScale = 0.0235;
-            const coreCount = Math.floor(PARTICLE_COUNT * 0.52);
-            const veilCount = Math.floor(PARTICLE_COUNT * 0.34);
-
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const idx = i * 3;
-                let sample;
-                let sampleX;
-                let sampleY;
-                let depth;
-
-                if (i < coreCount) {
-                    sample = corePoints.length ? corePoints[Math.floor(Math.random() * corePoints.length)] : allPoints[Math.floor(Math.random() * allPoints.length)];
-                    const jitter = 2.2 + (1 - sample.alpha) * 7.5 + Math.random() * 5.4;
-                    sampleX = sample.x + (Math.random() - 0.5) * jitter;
-                    sampleY = sample.y + (Math.random() - 0.5) * jitter;
-                    depth = (Math.random() - 0.5) * 0.12;
-                } else if (i < coreCount + veilCount) {
-                    sample = allPoints[Math.floor(Math.random() * allPoints.length)];
-                    const angle = Math.random() * Math.PI * 2;
-                    const radius = 4 + Math.random() * 16;
-                    sampleX = sample.x + Math.cos(angle) * radius + (Math.random() - 0.5) * 6;
-                    sampleY = sample.y + Math.sin(angle) * radius * 0.9 + (Math.random() - 0.5) * 6;
-                    depth = (Math.random() - 0.5) * 0.22;
-                } else {
-                    sample = allPoints[Math.floor(Math.random() * allPoints.length)];
-                    const dx = sample.x - centerX;
-                    const dy = sample.y - centerYText;
-                    const length = Math.max(Math.hypot(dx, dy), 1);
-                    const drift = 10 + Math.random() * 26;
-                    const spread = 8 + Math.random() * 14;
-                    sampleX = sample.x + (dx / length) * drift + (Math.random() - 0.5) * spread;
-                    sampleY = sample.y + (dy / length) * drift * 0.72 + (Math.random() - 0.5) * spread;
-                    depth = (Math.random() - 0.5) * 0.36;
-                }
-
-                data[idx] = (sampleX - centerX) * pointScale;
-                data[idx + 1] = -(sampleY - centerYText) * pointScale;
-                data[idx + 2] = depth;
-            }
-
-            return data;
-        };
-
-        const getGreetingBucket = () => {
-            const hour = new Date().getHours();
-            if (hour >= 5 && hour < 11) return 'morning';
-            if (hour >= 11 && hour < 14) return 'noon';
-            if (hour >= 14 && hour < 18) return 'afternoon';
-            if (hour >= 18 && hour < 23) return 'evening';
-            return 'rest';
-        };
-
-        const getGreetingText = (variant, bucket) => {
-            if (variant === 'zhHans') {
-                if (bucket === 'morning') return '早上好';
-                if (bucket === 'noon') return '中午好';
-                if (bucket === 'afternoon') return '下午好';
-                if (bucket === 'evening') return '晚上好';
-                return '早点休息';
-            }
-
-            if (bucket === 'morning') return '早晨';
-            if (bucket === 'noon') return '晏晝好';
-            if (bucket === 'afternoon') return '下晝好';
-            if (bucket === 'evening') return '晚上好';
-            return '早啲休息';
-        };
-
-        const refreshLanguageShapes = (force = false) => {
-            const nextBucket = getGreetingBucket();
-            if (!force && nextBucket === currentGreetingBucket) return;
-
-            currentGreetingBucket = nextBucket;
-            precomputedShapes.zhHans = buildLanguageGlyphPoints(
-                getGreetingText('zhHans', nextBucket),
-                HANS_FONT_STACK
-            );
-            precomputedShapes.zhHant = buildLanguageGlyphPoints(
-                getGreetingText('zhHant', nextBucket),
-                HANT_FONT_STACK
-            );
-
-            if (geometry && (currentShape === 'zhHans' || hoveredShape === 'zhHans')) {
-                geometry.attributes.aTarget.array.set(precomputedShapes.zhHans);
-                geometry.attributes.aMorphTarget.array.set(precomputedShapes.zhHans);
-                geometry.attributes.aTarget.needsUpdate = true;
-                geometry.attributes.aMorphTarget.needsUpdate = true;
-                currentShape = 'zhHans';
-                activeLanguageMorphShape = null;
-                material.uniforms.uShapeMorph.value = 0;
-            }
-
-            if (geometry && (currentShape === 'zhHant' || hoveredShape === 'zhHant')) {
-                geometry.attributes.aTarget.array.set(precomputedShapes.zhHant);
-                geometry.attributes.aMorphTarget.array.set(precomputedShapes.zhHant);
-                geometry.attributes.aTarget.needsUpdate = true;
-                geometry.attributes.aMorphTarget.needsUpdate = true;
-                currentShape = 'zhHant';
-                activeLanguageMorphShape = null;
-                material.uniforms.uShapeMorph.value = 0;
-            }
-        };
-
         const getAboutPortraitMetrics = () => {
             const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(ABOUT_REFERENCE_CAMERA_FOV * 0.5)) * ABOUT_REFERENCE_CAMERA_Z;
             const visibleWidth = visibleHeight * (window.innerWidth / window.innerHeight);
@@ -1557,12 +1382,8 @@
             if (!geometry) return;
             if (currentShape === 'about' || hoveredShape === 'about') {
                 geometry.attributes.aTarget.array.set(precomputedShapes.about);
-                geometry.attributes.aMorphTarget.array.set(precomputedShapes.about);
                 geometry.attributes.aTarget.needsUpdate = true;
-                geometry.attributes.aMorphTarget.needsUpdate = true;
                 currentShape = 'about';
-                activeLanguageMorphShape = null;
-                material.uniforms.uShapeMorph.value = 0;
             }
             geometry.attributes.aAboutDust.array.set(aboutDustMask);
             geometry.attributes.aAboutDust.needsUpdate = true;
@@ -1755,7 +1576,6 @@
                 if (resolveWorldMapReady) resolveWorldMapReady();
             };
             img.src = 'assets/images/world-map.svg';
-            refreshLanguageShapes(true);
 
             if (adaptiveContext.aboutPortrait) {
                 const portraitImg = new Image();
@@ -1788,7 +1608,6 @@
 
         geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(precomputedShapes.grid, 3));
-        geometry.setAttribute('aMorphTarget', new THREE.BufferAttribute(new Float32Array(precomputedShapes.grid), 3));
         geometry.setAttribute('aTarget', new THREE.BufferAttribute(new Float32Array(precomputedShapes.grid), 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 3), 3));
         geometry.setAttribute('aAboutDust', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT), 1));
@@ -1843,11 +1662,9 @@
             uniforms: {
                 uTime: { value: 0 },
                 uProgress: { value: 0 },
-                uShapeMorph: { value: 0 },
                 uLinkedinMix: { value: 0 },
                 uAboutMix: { value: 0 },
                 uAboutMotionStrength: { value: 0 },
-                uLangMix: { value: 0 },
                 uWaveStrength: { value: 1 },
                 uHomeMotionStrength: { value: 0 },
                 uCenteredViewMix: { value: 0 },
@@ -1855,10 +1672,10 @@
                 uSceneOpacity: { value: 1 }
             },
             vertexShader: `
-                uniform float uTime; uniform float uProgress; uniform float uShapeMorph; uniform float uLinkedinMix; uniform float uAboutMix; uniform float uAboutMotionStrength; uniform float uLangMix; uniform float uWaveStrength; uniform float uHomeMotionStrength; uniform float uCenteredViewMix; uniform float uColorBreathStrength; uniform float uSceneOpacity; attribute vec3 aTarget; attribute vec3 aMorphTarget; attribute vec3 color; attribute vec4 aMotion; attribute vec4 aHomeMotion; attribute vec4 aColorMotion; attribute float aNetworkNode; attribute float aPointScale; attribute float aAboutDust; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix; varying float vOverlaySuppress; varying float vAboutFade; varying float vAboutMask; varying float vAboutDust;
+                uniform float uTime; uniform float uProgress; uniform float uLinkedinMix; uniform float uAboutMix; uniform float uAboutMotionStrength; uniform float uWaveStrength; uniform float uHomeMotionStrength; uniform float uCenteredViewMix; uniform float uColorBreathStrength; uniform float uSceneOpacity; attribute vec3 aTarget; attribute vec3 color; attribute vec4 aMotion; attribute vec4 aHomeMotion; attribute vec4 aColorMotion; attribute float aNetworkNode; attribute float aPointScale; attribute float aAboutDust; varying vec3 vColor; varying float vAlpha; varying float vLinkedinNodeMix; varying float vHiddenMix; varying float vOverlaySuppress; varying float vAboutFade; varying float vAboutMask; varying float vAboutDust;
                 void main() {
                     float progressEase = smoothstep(0.0, 1.0, uProgress);
-                    vec3 resolvedTarget = mix(aTarget, aMorphTarget, uShapeMorph);
+                    vec3 resolvedTarget = aTarget;
                     vec3 finalPos = mix(position, resolvedTarget, progressEase);
                     vec3 homeDrift = vec3(
                         sin(uTime * aHomeMotion.z + aHomeMotion.x) * aHomeMotion.w,
@@ -1900,23 +1717,6 @@
                         sin(uTime * (0.14 + aMotion.z * 0.1) + aMotion.x + aMotion.y) * 1.1
                     );
                     finalPos += aboutDustDrift * aAboutDust * uAboutMix;
-                    vec3 langDrift = vec3(
-                        (
-                            sin(uTime * (0.48 + aMotion.z * 0.34) + aMotion.x * 1.34 + aMotion.y * 0.42) +
-                            cos(uTime * (0.31 + aMotion.z * 0.22) + aMotion.y * 1.08) +
-                            sin(uTime * (0.16 + aMotion.z * 0.12) + aMotion.x * 2.1)
-                        ) * (0.05 + aPointScale * 0.06),
-                        (
-                            cos(uTime * (0.42 + aMotion.z * 0.28) + aMotion.y * 1.28 + aMotion.x * 0.36) +
-                            sin(uTime * (0.23 + aMotion.z * 0.14) + aMotion.x * 0.94) +
-                            cos(uTime * (0.12 + aMotion.z * 0.1) + aMotion.y * 1.86)
-                        ) * (0.058 + aPointScale * 0.07),
-                        (
-                            sin(uTime * (0.34 + aMotion.z * 0.26) + aMotion.x * 0.86 + aMotion.y * 1.06) +
-                            cos(uTime * (0.18 + aMotion.z * 0.12) + aMotion.y * 0.82)
-                        ) * (0.07 + aPointScale * 0.08)
-                    );
-                    finalPos += langDrift * uLangMix * 0.92;
                     vec4 mvPos = modelViewMatrix * vec4(finalPos, 1.0);
                     float defaultPointSize = (20.5 + progressEase * 35.5) * (1.0 / -mvPos.z);
                     float linkedinDepthFactor = clamp(18.0 / max(-mvPos.z, 0.001), 0.9, 1.16);
@@ -1942,10 +1742,8 @@
                     vec3 silverColor = mix(vec3(0.9, 0.92, 0.95), vec3(0.52, 0.56, 0.62), aColorMotion.w * 0.82);
                     float portraitTwinkle = smoothstep(0.94, 0.9992, sin(uTime * (0.46 + aMotion.z * 0.62) + aMotion.x * 2.4 + aMotion.y * 1.1) * 0.5 + 0.5) * (1.0 - aAboutDust) * uAboutMix;
                     float portraitSpark = smoothstep(0.982, 0.99985, sin(uTime * (0.78 + aMotion.z * 0.95) + aMotion.x * 3.8 + aMotion.y * 2.0) * 0.5 + 0.5) * (1.0 - aAboutDust) * uAboutMix;
-                    float langTwinkle = smoothstep(0.958, 0.9994, sin(uTime * (0.34 + aMotion.z * 0.42) + aMotion.x * 1.7 + aMotion.y * 0.8) * 0.5 + 0.5) * uLangMix;
-                    float langSpark = smoothstep(0.989, 0.99992, sin(uTime * (0.58 + aMotion.z * 0.6) + aMotion.x * 3.1 + aMotion.y * 1.4) * 0.5 + 0.5) * uLangMix;
                     float dustTwinkle = smoothstep(0.82, 0.995, sin(uTime * (0.6 + aMotion.z * 0.8) + aMotion.x * 2.4 + aMotion.y) * 0.5 + 0.5) * aAboutDust;
-                    float totalTwinkle = max(max(dustTwinkle * 0.58, portraitTwinkle * 0.2 + portraitSpark * 0.46), langTwinkle * 0.18 + langSpark * 0.52);
+                    float totalTwinkle = max(dustTwinkle * 0.58, portraitTwinkle * 0.2 + portraitSpark * 0.46);
                     vColor = mix(mix(color, silverColor, breathing), vec3(1.0), totalTwinkle);
                     vAboutMask = step(0.48, aColorMotion.w);
                     vAboutDust = aAboutDust;
@@ -2097,49 +1895,17 @@
         }
 
         const transitionTo = name => {
-            if (activeLanguageMorphShape === name) return;
             if (name === currentShape || !precomputedShapes[name]) return;
-            const isLanguageShape = shape => shape === 'en' || shape === 'zhHans' || shape === 'zhHant';
-            const isLanguageSwitch =
-                isLanguageShape(currentShape) &&
-                isLanguageShape(name) &&
-                material.uniforms.uProgress.value > 0.04;
-
-            if (isLanguageSwitch) {
-                const morphMix = material.uniforms.uShapeMorph.value;
-                const targetArray = geometry.attributes.aTarget.array;
-                const morphArray = geometry.attributes.aMorphTarget.array;
-                for (let i = 0; i < targetArray.length; i++) {
-                    targetArray[i] += (morphArray[i] - targetArray[i]) * morphMix;
-                }
-                geometry.attributes.aTarget.needsUpdate = true;
-                material.uniforms.uShapeMorph.value = 0;
-                morphArray.set(precomputedShapes[name]);
-                geometry.attributes.aMorphTarget.needsUpdate = true;
-                activeLanguageMorphShape = name;
-                if (name !== 'en' || currentShape === 'en') {
-                    currentShape = name;
-                }
-                return;
-            }
 
             geometry.attributes.aTarget.array.set(precomputedShapes[name]);
-            geometry.attributes.aMorphTarget.array.set(precomputedShapes[name]);
             geometry.attributes.aTarget.needsUpdate = true;
-            geometry.attributes.aMorphTarget.needsUpdate = true;
-            activeLanguageMorphShape = null;
-            material.uniforms.uShapeMorph.value = 0;
             currentShape = name;
         };
 
         const forceShapeTarget = name => {
             if (!geometry || !precomputedShapes[name]) return;
             geometry.attributes.aTarget.array.set(precomputedShapes[name]);
-            geometry.attributes.aMorphTarget.array.set(precomputedShapes[name]);
             geometry.attributes.aTarget.needsUpdate = true;
-            geometry.attributes.aMorphTarget.needsUpdate = true;
-            activeLanguageMorphShape = null;
-            material.uniforms.uShapeMorph.value = 0;
             currentShape = name;
         };
 
@@ -2410,18 +2176,14 @@
             if (!adaptiveContext.aboutPortrait && currentShape === 'about') {
                 currentShape = 'grid';
                 hoveredShape = 'grid';
-                activeLanguageMorphShape = null;
                 if (material) {
                     material.uniforms.uProgress.value = 0;
                     material.uniforms.uAboutMix.value = 0;
                     material.uniforms.uAboutMotionStrength.value = 0;
-                    material.uniforms.uShapeMorph.value = 0;
                 }
                 if (geometry && precomputedShapes.grid) {
                     geometry.attributes.aTarget.array.set(precomputedShapes.grid);
-                    geometry.attributes.aMorphTarget.array.set(precomputedShapes.grid);
                     geometry.attributes.aTarget.needsUpdate = true;
-                    geometry.attributes.aMorphTarget.needsUpdate = true;
                 }
             }
             updateZones();
@@ -2445,7 +2207,6 @@
             syncAdaptiveRuntime();
             if (adaptiveContext.viewport !== 'mobile') closeMobileMenu();
             aboutShapeReady = false;
-            refreshLanguageShapes(true);
             if (currentShape === 'about') refreshAboutShape();
             renderer.setSize(window.innerWidth, window.innerHeight);
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -2455,9 +2216,7 @@
                 precomputedShapes.en = getEarthPoints(earthMapImage);
                 if (currentShape === 'en' || hoveredShape === 'en') {
                     geometry.attributes.aTarget.array.set(precomputedShapes.en);
-                    geometry.attributes.aMorphTarget.array.set(precomputedShapes.en);
                     geometry.attributes.aTarget.needsUpdate = true;
-                    geometry.attributes.aMorphTarget.needsUpdate = true;
                 }
             }
         });
@@ -2499,7 +2258,6 @@
             delayedPos.y += (mouse.y - delayedPos.y) * lerpFactor;
             cursorEl.style.opacity = isInside ? '1' : '0';
             cursorEl.style.visibility = isInside ? 'visible' : 'hidden';
-            refreshLanguageShapes();
             const aboutSnapY = getAboutSnapY();
             const currentScrollY = window.scrollY;
             const pageIntent = adaptiveContext.aboutPortrait && currentScrollY >= aboutSnapY * 0.5 ? 'about' : 'grid';
@@ -2508,8 +2266,6 @@
             document.body.dataset.navInteractive = navInteractive ? 'true' : 'false';
             const hoverX = isInside ? mouse.x : -10000;
             const hoverY = isInside ? mouse.y : -10000;
-            const navEnItem = document.querySelector('.nav-en');
-            const langDropdownOpen = !!navEnItem && (navEnItem.matches(':hover') || navEnItem.matches(':focus-within'));
 
             let hit = false;
             let isContactHovered = false;
@@ -2518,10 +2274,6 @@
             let activeLightTarget = null;
             hoveredShape = 'grid';
             hitZones.forEach(z => {
-                if ((z.shape === 'zhHans' || z.shape === 'zhHant') && !langDropdownOpen) {
-                    z.el.classList.remove('is-active');
-                    return;
-                }
                 if (hoverEffectsEnabled && hoverX > z.left && hoverX < z.right && hoverY > z.top && hoverY < z.bottom) {
                     hit = true;
                     const targetCenterX = (z.left + z.right) * 0.5;
@@ -2617,20 +2369,6 @@
                 forceShapeTarget('grid');
                 material.uniforms.uProgress.value = 0;
             }
-            const shapeMorphTarget = activeLanguageMorphShape ? 1 : 0;
-            material.uniforms.uShapeMorph.value = THREE.MathUtils.lerp(
-                material.uniforms.uShapeMorph.value,
-                shapeMorphTarget,
-                shapeMorphTarget > material.uniforms.uShapeMorph.value ? 0.105 : 0.085
-            );
-            if (activeLanguageMorphShape && material.uniforms.uShapeMorph.value > 0.998) {
-                const completedLanguageShape = activeLanguageMorphShape;
-                geometry.attributes.aTarget.array.set(geometry.attributes.aMorphTarget.array);
-                geometry.attributes.aTarget.needsUpdate = true;
-                currentShape = completedLanguageShape;
-                activeLanguageMorphShape = null;
-                material.uniforms.uShapeMorph.value = 0;
-            }
             const linkedinTargetVisibility = (shapeIntent === 'linkedin') ? 1 : 0;
             linkedinNetworkVisibility += (linkedinTargetVisibility - linkedinNetworkVisibility) * 0.09;
             material.uniforms.uLinkedinMix.value = linkedinNetworkVisibility;
@@ -2646,10 +2384,8 @@
             if (shapeIntent === 'grid' && currentShape === 'about' && material.uniforms.uProgress.value < 0.002) {
                 currentShape = 'grid';
             }
-            if (shapeIntent === 'grid' && (currentShape === 'zhHans' || currentShape === 'zhHant' || currentShape === 'en') && material.uniforms.uProgress.value < 0.002) {
+            if (shapeIntent === 'grid' && currentShape === 'en' && material.uniforms.uProgress.value < 0.002) {
                 currentShape = 'grid';
-                activeLanguageMorphShape = null;
-                material.uniforms.uShapeMorph.value = 0;
             }
             material.uniforms.uAboutMix.value = THREE.MathUtils.lerp(
                 material.uniforms.uAboutMix.value,
@@ -2664,12 +2400,6 @@
                 aboutMotionTarget > material.uniforms.uAboutMotionStrength.value
                     ? 0.12
                     : 0.08
-            );
-            const langMixTarget = (motionShape === 'zhHans' || motionShape === 'zhHant') ? motionScale : 0;
-            material.uniforms.uLangMix.value = THREE.MathUtils.lerp(
-                material.uniforms.uLangMix.value,
-                langMixTarget,
-                langMixTarget > material.uniforms.uLangMix.value ? 0.14 : 0.08
             );
             if (motionShape !== 'linkedin') {
                 const aboutColorMix = material.uniforms.uAboutMix.value;
@@ -2758,24 +2488,14 @@
             const currentSpeed = (motionShape === 'en') ? earthRotationSpeed : baseRotationSpeed;
             const isLeavingHome = previousMotionShape === 'home' && motionShape === 'grid';
 
-            const isFrontFacingTextShape = motionShape === 'zhHans' || motionShape === 'zhHant';
-            const wasFrontFacingTextShape = previousMotionShape === 'zhHans' || previousMotionShape === 'zhHant';
-            const isEarthTextTransition =
-                (previousMotionShape === 'en' && isFrontFacingTextShape) ||
-                (wasFrontFacingTextShape && motionShape === 'en');
-
-            if (isEarthTextTransition) {
-                totalRotation = normalizeAngle(particleRig.rotation.y);
-            }
-
-            if (motionShape !== 'linkedin' && motionShape !== 'about' && motionShape !== 'home' && !isFrontFacingTextShape) {
+            if (motionShape !== 'linkedin' && motionShape !== 'about' && motionShape !== 'home') {
                 totalRotation = normalizeAngle(totalRotation + delta * currentSpeed);
             } else if (motionShape === 'home') {
                 totalRotation = normalizeAngle(particleRig.rotation.y);
             }
             
             let targetRot;
-            if (motionShape === 'linkedin' || motionShape === 'contact' || isFrontFacingTextShape) {
+            if (motionShape === 'linkedin' || motionShape === 'contact') {
                 targetRot = 0;
             } else if (motionShape === 'home') {
                 targetRot = 0;
@@ -2851,18 +2571,12 @@
                 particleRig.rotation.y = 0;
                 totalRotation = 0;
             } else {
-                const rotationLerp = isFrontFacingTextShape
-                    ? 0.14
-                    : (motionShape === 'grid' ? (isLeavingHome ? 0.18 : 0.05) : 0.1);
+                const rotationLerp = motionShape === 'grid' ? (isLeavingHome ? 0.18 : 0.05) : 0.1;
                 particleRig.rotation.y = lerpAngle(
                     particleRig.rotation.y,
                     targetRot,
                     rotationLerp
                 );
-                if (isFrontFacingTextShape && Math.abs(normalizeAngle(particleRig.rotation.y)) < 0.003) {
-                    particleRig.rotation.y = 0;
-                    totalRotation = 0;
-                }
             }
             previousMotionShape = motionShape;
             renderer.render(scene, camera);
@@ -2902,7 +2616,7 @@
                 const rect = button.getBoundingClientRect();
                 return {
                     el: button,
-                    shape: button.dataset.shape || 'en',
+                    shape: 'en',
                     left: rect.left,
                     right: rect.right,
                     top: rect.top - (index === 0 ? 16 : 4),
